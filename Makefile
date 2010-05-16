@@ -26,7 +26,7 @@ INCLUDES := -I$(GCCSDK_INSTALL_ENV)/include
 
 LINKS := -L$(GCCSDK_INSTALL_ENV)/lib
 
-OBJS := menugen.o stack.o
+OBJS := data.o menugen.o stack.o
 
 # Start to define the targets.
 
@@ -39,6 +39,9 @@ menugen: $(OBJS)
 
 menugen.o: menugen.c stack.h
 	$(CC) $(CCFLAGS) $(INCLUDES) -o menugen.o -c menugen.c
+
+data.o: data.c data.h
+	$(CC) $(CCFLAGS) $(INCLUDES) -o data.o -c data.c
 
 stack.o: stack.c stack.h
 	$(CC) $(CCFLAGS) $(INCLUDES) -o stack.o -c stack.c

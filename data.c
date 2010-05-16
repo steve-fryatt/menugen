@@ -5,6 +5,8 @@
  * Handle and track menu definition data.
  */
 
+#include <stdlib.h>
+#include <string.h>
 
 /* We use types from this, but don't try to link to any subroutines! */
 
@@ -126,6 +128,13 @@ int data_create_new_item(char *text)
 
 	if (item == NULL)
 		return 1;
+
+	item->text = (char *) malloc(strlen(text)+1);
+
+	if (item->text == NULL) {
+		free(item);
+		return 1;
+	}
 
 	strcpy(item->text, text);
 	item->validation = NULL;

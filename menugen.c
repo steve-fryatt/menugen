@@ -27,6 +27,7 @@
 #include "data.h"
 #include "stack.h"
 
+#define MAX_PARAM_LIST 10
 #define MAX_PARAM_LEN 256
 #define MAX_STACK_SIZE 100
 
@@ -36,23 +37,32 @@
 #define TYPE_SUBMENU  3
 #define TYPE_WRITABLE 4
 
+#define MAX_COMMAND_LEN 20
 
-typedef struct block_head {
-	int	dialogues;
-	int	indirected;
-	int	validation;
-};
+static void command_menu(char params[][MAX_PARAM_LEN]);
+static void command_item(char params[][MAX_PARAM_LEN]);
+static void command_submenu(char params[][MAX_PARAM_LEN]);
+static void command_dbox(char params[][MAX_PARAM_LEN]);
+static void command_writable(char params[][MAX_PARAM_LEN]);
+static void command_indirected_item(char params[][MAX_PARAM_LEN]);
+static void command_indirected_menu(char params[][MAX_PARAM_LEN]);
+
+//typedef struct block_head {
+//	int	dialogues;
+//	int	indirected;
+//	int	validation;
+//};
 
 struct command_def {
 	char	command[MAX_COMMAND_LEN];
-	char	params[MAX_PARAM_LEN];
+	char	params[MAX_PARAM_LIST];
 	int	menu;
 	int	item;
 	int	submenu;
 	int	writable;
 	int	new_type;
-	void	(*handler)(char params[][MAX_PARAM_LENGTH]);
-}
+	void	(*handler)(char params[][MAX_PARAM_LEN]);
+};
 
 void process_file(char *filename);
 int find_parameters(char params[][MAX_PARAM_LEN], char *line, char *types);
@@ -61,36 +71,41 @@ void report_log(char *message);
 
 static int line_number = 1;
 static int error = 0;
-static int verbose_output = 0;
+static int verbose_output = 1;
+
+/* Define the commands here, in terms of name, parameters, what commands they
+ * must be subservient to, what groups they open, and what handlers they
+ * use.
+ *
+ * Order is important.  If a command can appear in different groups, care
+ * must be taken to ensure that the entries apopear in a suitable order.
+ */
 
 #define COMMANDS 7
 
 static const struct command_def command_list[] = {
-	{"menu", "IS", 0, 0, 0, 0, TYPE_MENU, command_menu},
-	{"item", "S", 1, 0, 0, 0, TYPE_ITEM, command_item},
-	{"submenu", "I", 1, 1, 0, 0, TYPE_SUBMENU, command_submenu},
-	{"d_box", "S", 1, 1, 0, 0, TYPE_SUBMENU, command_dbox},
-	{"writable", "", 1, 1, 0, 0, TYPE_WRITABLE, command_writable},
-	{"indirected", 1, 1, 0, 0, TYPE_NONE, command_indirected_item},
-	{"indirected", 1, 0, 0, 0, TYPE_NONE, command_indirected_menu}
+	{"menu",       "IS", 0, 0, 0, 0, TYPE_MENU,     command_menu},
+	{"item",       "S",  1, 0, 0, 0, TYPE_ITEM,     command_item},
+	{"submenu",    "I",  1, 1, 0, 0, TYPE_SUBMENU,  command_submenu},
+	{"d_box",      "S",  1, 1, 0, 0, TYPE_SUBMENU,  command_dbox},
+	{"writable",   "",   1, 1, 0, 0, TYPE_WRITABLE, command_writable},
+	{"indirected", "I",  1, 1, 0, 0, TYPE_NONE,     command_indirected_item},
+	{"indirected", "I",  1, 0, 0, 0, TYPE_NONE,     command_indirected_menu}
 };
 
 
-
-int main(void)
+int main(int argc, char *argv[])
 {
-	char params[10][MAX_PARAM_LEN], types[64];
-	int found, i;
-
 	stack_initialise(MAX_STACK_SIZE);
 
-	found = find_parameters(params, "command(\"string\",\"string2\",765,877)", types);
-
-	printf("Returned types: %s\n", types);
-
-	for (i=0; i<found; i++) {
-		printf("Param %d: '%s'\n", i, params[i]);
+	if (argc != 3) {
+		printf("Usage: menugen <sourcefile> <output>\n");
+		return 1;
 	}
+
+	process_file(argv[1]);
+
+	return 0;
 }
 
 
@@ -107,7 +122,7 @@ void process_file(char *filename)
 	FILE	*f;
 	int	c, last, len, pcount, i, cid;
 	int	comment, string, menu, item, submenu, writable;
-	char	command[4096], params[10][MAX_PARAM_LEN], types[64];
+	char	command[4096], params[MAX_PARAM_LIST][MAX_PARAM_LEN], types[64];
 
 
 	comment = 0;
@@ -134,8 +149,6 @@ void process_file(char *filename)
 				comment = 1;
 				if (len > 0)
 					len--;
-
-				report_log(" <comment>");
 			}
 
 			if (c == '/' && last == '*') {
@@ -154,10 +167,10 @@ void process_file(char *filename)
 					command[len] = '\0';
 					pcount = find_parameters(params, command, types);
 
-					cid = -1
+					cid = -1;
 					for (i = 0; i < COMMANDS; i++) {
-						if (strcmp(command_list[i].command, params[0]) == 1 &&
-								command_list[i],new_type != TYPE_NONE &&
+						if (strcmp(command_list[i].command, params[0]) == 0 &&
+								command_list[i].new_type != TYPE_NONE &&
 								command_list[i].menu == menu &&
 								command_list[i].item == item &&
 								command_list[i].submenu == submenu &&
@@ -165,116 +178,35 @@ void process_file(char *filename)
 							cid = i;
 							break;
 						}
-
-						if (cid != -1) {
-							if (strcmp(command_list[i].types, types) == 0) {
-								command_list[i].handler(params);
-								stack_push(command_list[i].new_type);
-								switch(command_list[i].new_type) {
-								case TYPE_MENU:
-									menu = 1;
-									break;
-								case TYPE_ITEM:
-									item = 0;
-									break;
-								case TYPE_SUBMENU:
-									submenu = 0;
-									break;
-								case TYPE_WRITABLE:
-									writable = 0;
-									break;
-								}
-
-							} else {
-								report_error("Bad parameters");
-							}
-						} else {
-							report_error("Invalid command");
-						}
 					}
 
-					command[len] = '\0';
-					pcount = find_parameters(params, command, types);
-
-					if (strcmp(params[0], "menu") == 0) {
-						if (strcmp(types, "IS") == 0) {
-							if (menu) {
-								report_error("menus can not be nested");
-							} else {
+					if (cid != -1) {
+						if (strcmp(command_list[i].params, types) == 0) {
+							command_list[i].handler(params);
+							stack_push(command_list[i].new_type);
+							switch(command_list[i].new_type) {
+							case TYPE_MENU:
 								menu = 1;
-								stack_push(TYPE_MENU);
-								data_create_new_menu(params[1], params[2]);
+								break;
+							case TYPE_ITEM:
+								item = 0;
+								break;
+							case TYPE_SUBMENU:
+								submenu = 0;
+								break;
+							case TYPE_WRITABLE:
+								writable = 0;
+								break;
 							}
-						} else {
-							report_error("Bad parameters");
-						}
-					} else if (strcmp(params[0], "item") == 0) {
-						if (strcmp(types, "S") == 0) {
-							if (!menu) {
-								report_error("items must be within a menu");
-							} else {
-								if (item) {
-									report_error("items can not be nested");
-								} else {
-									item = 1;
-									stack_push(TYPE_ITEM);
-									data_create_new_item(params[1]);
-								}
-							}
-						} else {
-							report_error("Bad parameters");
-						}
-					} else if (strcmp(params[0], "sumbenu") == 0) {
-						if (strcmp(types, "I") == 0) {
-							if (!item) {
-								report_error("submenu must be within an item");
-							} else {
-								if (submenu) {
-									report_error("submenu can not be nested");
-								} else {
-									submenu = 1;
-									stack_push(TYPE_SUBMENU);
-									data_set_item_submenu(params[1], 0);
-								}
-							}
-						} else {
-							report_error("Bad parameters");
-						}
-					} else if (strcmp(params[0], "d_box") == 0) {
-						if (strcmp(types, "S") == 0) {
-							if (!item) {
-								report_error("d_box must be within an item");
-							} else {
-								if (submenu) {
-									report_error("submenu can not be nested");
-								} else {
-									submenu = 1;
-									stack_push(TYPE_SUBMENU);
-									data_set_item_submenu(params[1], 1);
-								}
-							}
-						} else {
-							report_error("Bad parameters");
-						}
-					} else if (strcmp(params[0], "writable") == 0) {
-						if (strcmp(types, "") == 0) {
-							if (!item) {
-								report_error("writable must be within an item");
-							} else {
-								if (writable) {
-									report_error("writable can not be nested");
-								} else {
-									writable = 1;
-									stack_push(TYPE_WRITABLE);
-									data_set_item_writable();
-								}
-							}
+							if (verbose_output)
+								printf("Found command %s as section head\n", command_list[cid].command);
 						} else {
 							report_error("Bad parameters");
 						}
 					} else {
-						report_error(strcat(params[0], "cannot take statements"));
+						report_error("Invalid command");
 					}
+					len = 0;
 				} else if (c == '}' && !string) {
 					switch(stack_pop()) {
 					case TYPE_MENU:
@@ -295,83 +227,36 @@ void process_file(char *filename)
 					command[len] = '\0';
 					pcount = find_parameters(params, command, types);
 
-					if (strcmp(params[0], "menu") == 0) {
-						if (strcmp(types, "IS") == 0) {
-							if (menu) {
-								report_error("menus can not be nested");
-							} else {
-								data_create_new_menu(params[1], params[2]);
-							}
-						} else {
-							report_error("Bad parameters");
-						}
-					} else if (strcmp(params[0], "item") == 0) {
-						if (strcmp(types, "S") == 0) {
-							if (!menu) {
-								report_error("items must be within a menu");
-							} else {
-								if (item) {
-									report_error("items can not be nested");
-								} else {
-									data_create_new_item(params[1]);
-								}
-							}
-						} else {
-							report_error("Bad parameters");
-						}
-					} else if (strcmp(params[0], "sumbenu") == 0) {
-						if (strcmp(types, "I") == 0) {
-							if (!item) {
-								report_error("submenu must be within an item");
-							} else {
-								if (submenu) {
-									report_error("submenu can not be nested");
-								} else {
-									data_set_item_submenu(params[1], 0);
-								}
-							}
-						} else {
-							report_error("Bad parameters");
-						}
-					} else if (strcmp(params[0], "d_box") == 0) {
-						if (strcmp(types, "S") == 0) {
-							if (!item) {
-								report_error("d_box must be within an item");
-							} else {
-								if (submenu) {
-									report_error("submenu can not be nested");
-								} else {
-									data_set_item_submenu(params[1], 1);
-								}
-							}
-						} else {
-							report_error("Bad parameters");
-						}
-					} else if (strcmp(params[0], "writable") == 0) {
-						if (strcmp(types, "") == 0) {
-							if (!item) {
-								report_error("writable must be within an item");
-							} else {
-								if (writable) {
-									report_error("writable can not be nested");
-								} else {
-									data_set_item_writable();
-								}
-							}
-						} else {
-							report_error("Bad parameters");
-						}
-					} else if (strcmp(params[0], "indirected") == 0) {
-						if (strcmp(types, "I") == 0) {
-
-						} else {
-							report_error
+					cid = -1;
+					for (i = 0; i < COMMANDS; i++) {
+						if (strcmp(command_list[i].command, params[0]) == 0 &&
+								command_list[i].menu == menu &&
+								command_list[i].item == item &&
+								command_list[i].submenu == submenu &&
+								command_list[i].writable == writable) {
+							cid = i;
+							break;
 						}
 					}
+
+					if (cid != -1) {
+						if (strcmp(command_list[i].params, types) == 0) {
+							command_list[i].handler(params);
+							if (verbose_output)
+								printf("Found command %s standalone\n", command_list[cid].command);
+						} else {
+							report_error("Bad parameters");
+						}
+					} else {
+						report_error("Invalid command");
+					}
+					len = 0;
 				} else if (c != '\0') {
 					command[len++] = c;
 				}
 			}
+
+			last = c;
 		}
 
 		fclose(f);
@@ -379,6 +264,10 @@ void process_file(char *filename)
 		report_error("Bad source filename");
 	}
 }
+
+/**
+ * The various command handlers.
+ */
 
 void command_menu(char params[][MAX_PARAM_LEN])
 {
@@ -405,6 +294,16 @@ void command_writable(char params[][MAX_PARAM_LEN])
 	data_set_item_writable();
 }
 
+void command_indirected_item(char params[][MAX_PARAM_LEN])
+{
+	data_set_item_indirection(atoi(params[1]));
+}
+
+void command_indirected_menu(char params[][MAX_PARAM_LEN])
+{
+	data_set_menu_title_indirection(atoi(params[1]));
+}
+
 
 /**
  * Split the parameters from the command line passed in, returning them as
@@ -427,7 +326,7 @@ int find_parameters(char params[][MAX_PARAM_LEN], char *line, char *types)
 	entries = 0;
 	error = 0;
 
-	copy = (char *) malloc(strlen(line + 1));
+	copy = (char *) malloc(strlen(line) + 1);
 
 	if (copy == NULL)
 		return entries;
