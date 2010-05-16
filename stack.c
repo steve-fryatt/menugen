@@ -7,6 +7,8 @@
 
 #include <stdlib.h>
 
+/* Local source headers. */
+
 #include "stack.h"
 
 static int stack_size = 0;

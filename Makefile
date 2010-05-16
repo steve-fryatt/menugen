@@ -4,6 +4,8 @@
 #
 # This file really needs to be run by GNUMake.
 
+.PHONY:	all
+
 ifeq ($(TARGET),riscos)
   CC := $(wildcard $(GCCSDK_INSTALL_CROSSBIN)/*gcc)
 
@@ -28,7 +30,6 @@ OBJS := menugen.o stack.o
 
 # Start to define the targets.
 
-.PHONY:	all
 all:	menugen
 
 menugen: $(OBJS)

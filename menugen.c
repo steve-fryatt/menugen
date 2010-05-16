@@ -18,21 +18,41 @@
 #include <string.h>
 #include <stdio.h>
 
+/* We use types from this, but don't try to link to any subroutines! */
+
+#include "oslib/wimp.h"
+
+/* Local source headers. */
+
+#include "data.h"
 #include "stack.h"
 
 #define MAX_PARAM_LEN 256
 #define MAX_STACK_SIZE 100
 
+#define TYPE_NONE     0
 #define TYPE_MENU     1
 #define TYPE_ITEM     2
 #define TYPE_SUBMENU  3
 #define TYPE_WRITABLE 4
+
 
 typedef struct block_head {
 	int	dialogues;
 	int	indirected;
 	int	validation;
 };
+
+struct command_def {
+	char	command[MAX_COMMAND_LEN];
+	char	params[MAX_PARAM_LEN];
+	int	menu;
+	int	item;
+	int	submenu;
+	int	writable;
+	int	new_type;
+	void	(*handler)(char params[][MAX_PARAM_LENGTH]);
+}
 
 void process_file(char *filename);
 int find_parameters(char params[][MAX_PARAM_LEN], char *line, char *types);
@@ -43,6 +63,17 @@ static int line_number = 1;
 static int error = 0;
 static int verbose_output = 0;
 
+#define COMMANDS 7
+
+static const struct command_def command_list[] = {
+	{"menu", "IS", 0, 0, 0, 0, TYPE_MENU, command_menu},
+	{"item", "S", 1, 0, 0, 0, TYPE_ITEM, command_item},
+	{"submenu", "I", 1, 1, 0, 0, TYPE_SUBMENU, command_submenu},
+	{"d_box", "S", 1, 1, 0, 0, TYPE_SUBMENU, command_dbox},
+	{"writable", "", 1, 1, 0, 0, TYPE_WRITABLE, command_writable},
+	{"indirected", 1, 1, 0, 0, TYPE_NONE, command_indirected_item},
+	{"indirected", 1, 0, 0, 0, TYPE_NONE, command_indirected_menu}
+};
 
 
 
@@ -74,7 +105,7 @@ int main(void)
 void process_file(char *filename)
 {
 	FILE	*f;
-	int	c, last, len, pcount;
+	int	c, last, len, pcount, i, cid;
 	int	comment, string, menu, item, submenu, writable;
 	char	command[4096], params[10][MAX_PARAM_LEN], types[64];
 
@@ -119,8 +150,49 @@ void process_file(char *filename)
 				string = !string;
 
 			if (!comment && ((c > 32) || (string && (c == 32)))) {
-				switch(c) {
-				case '{':
+				if (c == '{' && !string) {
+					command[len] = '\0';
+					pcount = find_parameters(params, command, types);
+
+					cid = -1
+					for (i = 0; i < COMMANDS; i++) {
+						if (strcmp(command_list[i].command, params[0]) == 1 &&
+								command_list[i],new_type != TYPE_NONE &&
+								command_list[i].menu == menu &&
+								command_list[i].item == item &&
+								command_list[i].submenu == submenu &&
+								command_list[i].writable == writable) {
+							cid = i;
+							break;
+						}
+
+						if (cid != -1) {
+							if (strcmp(command_list[i].types, types) == 0) {
+								command_list[i].handler(params);
+								stack_push(command_list[i].new_type);
+								switch(command_list[i].new_type) {
+								case TYPE_MENU:
+									menu = 1;
+									break;
+								case TYPE_ITEM:
+									item = 0;
+									break;
+								case TYPE_SUBMENU:
+									submenu = 0;
+									break;
+								case TYPE_WRITABLE:
+									writable = 0;
+									break;
+								}
+
+							} else {
+								report_error("Bad parameters");
+							}
+						} else {
+							report_error("Invalid command");
+						}
+					}
+
 					command[len] = '\0';
 					pcount = find_parameters(params, command, types);
 
@@ -131,6 +203,7 @@ void process_file(char *filename)
 							} else {
 								menu = 1;
 								stack_push(TYPE_MENU);
+								data_create_new_menu(params[1], params[2]);
 							}
 						} else {
 							report_error("Bad parameters");
@@ -145,6 +218,7 @@ void process_file(char *filename)
 								} else {
 									item = 1;
 									stack_push(TYPE_ITEM);
+									data_create_new_item(params[1]);
 								}
 							}
 						} else {
@@ -160,6 +234,7 @@ void process_file(char *filename)
 								} else {
 									submenu = 1;
 									stack_push(TYPE_SUBMENU);
+									data_set_item_submenu(params[1], 0);
 								}
 							}
 						} else {
@@ -175,6 +250,7 @@ void process_file(char *filename)
 								} else {
 									submenu = 1;
 									stack_push(TYPE_SUBMENU);
+									data_set_item_submenu(params[1], 1);
 								}
 							}
 						} else {
@@ -190,6 +266,7 @@ void process_file(char *filename)
 								} else {
 									writable = 1;
 									stack_push(TYPE_WRITABLE);
+									data_set_item_writable();
 								}
 							}
 						} else {
@@ -198,9 +275,7 @@ void process_file(char *filename)
 					} else {
 						report_error(strcat(params[0], "cannot take statements"));
 					}
-					break;
-
-				case '}':
+				} else if (c == '}' && !string) {
 					switch(stack_pop()) {
 					case TYPE_MENU:
 						menu = 0;
@@ -216,15 +291,85 @@ void process_file(char *filename)
 						break;
 					}
 					len = 0;
-					break;
+				} else if (c == ';' && !string) {
+					command[len] = '\0';
+					pcount = find_parameters(params, command, types);
 
-				case ';':
-					break;
+					if (strcmp(params[0], "menu") == 0) {
+						if (strcmp(types, "IS") == 0) {
+							if (menu) {
+								report_error("menus can not be nested");
+							} else {
+								data_create_new_menu(params[1], params[2]);
+							}
+						} else {
+							report_error("Bad parameters");
+						}
+					} else if (strcmp(params[0], "item") == 0) {
+						if (strcmp(types, "S") == 0) {
+							if (!menu) {
+								report_error("items must be within a menu");
+							} else {
+								if (item) {
+									report_error("items can not be nested");
+								} else {
+									data_create_new_item(params[1]);
+								}
+							}
+						} else {
+							report_error("Bad parameters");
+						}
+					} else if (strcmp(params[0], "sumbenu") == 0) {
+						if (strcmp(types, "I") == 0) {
+							if (!item) {
+								report_error("submenu must be within an item");
+							} else {
+								if (submenu) {
+									report_error("submenu can not be nested");
+								} else {
+									data_set_item_submenu(params[1], 0);
+								}
+							}
+						} else {
+							report_error("Bad parameters");
+						}
+					} else if (strcmp(params[0], "d_box") == 0) {
+						if (strcmp(types, "S") == 0) {
+							if (!item) {
+								report_error("d_box must be within an item");
+							} else {
+								if (submenu) {
+									report_error("submenu can not be nested");
+								} else {
+									data_set_item_submenu(params[1], 1);
+								}
+							}
+						} else {
+							report_error("Bad parameters");
+						}
+					} else if (strcmp(params[0], "writable") == 0) {
+						if (strcmp(types, "") == 0) {
+							if (!item) {
+								report_error("writable must be within an item");
+							} else {
+								if (writable) {
+									report_error("writable can not be nested");
+								} else {
+									data_set_item_writable();
+								}
+							}
+						} else {
+							report_error("Bad parameters");
+						}
+					} else if (strcmp(params[0], "indirected") == 0) {
+						if (strcmp(types, "I") == 0) {
 
-				default:
-					if (c != '\0')
-						command[len++] = c;
-					break;
+						} else {
+							report_error
+						}
+					}
+				} else if (c != '\0') {
+					command[len++] = c;
 				}
 			}
 		}
@@ -233,6 +378,31 @@ void process_file(char *filename)
 	} else {
 		report_error("Bad source filename");
 	}
+}
+
+void command_menu(char params[][MAX_PARAM_LEN])
+{
+	data_create_new_menu(params[1], params[2]);
+}
+
+void command_item(char params[][MAX_PARAM_LEN])
+{
+	data_create_new_item(params[1]);
+}
+
+void command_submenu(char params[][MAX_PARAM_LEN])
+{
+	data_set_item_submenu(params[1], 0);
+}
+
+void command_dbox(char params[][MAX_PARAM_LEN])
+{
+	data_set_item_submenu(params[1], 1);
+}
+
+void command_writable(char params[][MAX_PARAM_LEN])
+{
+	data_set_item_writable();
 }
 
 
