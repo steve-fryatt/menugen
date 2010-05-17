@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 {
 	stack_initialise(MAX_STACK_SIZE);
 
-	printf("MenuGen 2.00 - %s\n", "16-May-2010");
+	printf("MenuGen 2.00 - %s\n", BUILD_DATE);
 	printf("Copyright Stephen Fryatt, 2010\n");
 
 	if (argc != 3) {
