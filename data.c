@@ -197,11 +197,6 @@ int data_collate_structures(int verbose)
 	while (menu != NULL) {
 		item = menu->first_item;
 
-//		if (verbose) {
-//			printf("Menu: '%s'\n", menu->tag);
-//			printf("  Title: '%s'\n", menu->title);
-//		}
-
 		/* Create a dummy menu item if there isn't one. */
 
 		if (item == NULL) {
@@ -250,20 +245,12 @@ int data_collate_structures(int verbose)
 				indirection->next = indirection_list;
 				indirection_list = indirection;
 			}
-
-//			if (verbose)
-//				printf("    Indirected title length: %d\n", menu->title_len);
 		}
 
 		/* Calculate an offset for the menu block in the file. */
 
 		menu->file_offset = offset;
 		offset += sizeof(struct file_menu_block) + (menu->items * sizeof(struct file_item_block));
-
-//		if (verbose) {
-//			printf("  Menu block at file offset: %d\n", menu->file_offset);
-//			printf("  Menu items: %d\n", menu->items);
-//		}
 
 		/* Scan through the menu items. */
 
@@ -335,15 +322,10 @@ int data_collate_structures(int verbose)
 			item->file_offset = item_offset;
 			item_offset += sizeof(struct file_item_block);
 
-//			if (verbose)
-//				printf("  Item block at file offset: %d\n", item->file_offset);
-
 			item = item->next;
 		}
 
 		menu->item_width = width*16 + 16;
-//		if (verbose)
-//			printf ("  Width: %d units (%d characters)\n", menu->item_width, width);
 
 		menu = menu->next;
 	}
@@ -361,19 +343,11 @@ int data_collate_structures(int verbose)
 			indirection->block_length = (((indirection->menu)->title_len) + 7) & (~3);
 
 			offset += indirection->block_length;
-
-//			if (verbose)
-//				printf("Menu title indirection for %d bytes (block length %d bytes) at file offset: %d\n",
-//					(indirection->menu)->title_len, indirection->block_length, indirection->file_offset);
 		} else if (indirection->item != NULL) {
 			indirection->file_offset = offset;
 			indirection->block_length = (((indirection->item)->text_len) + 7) & (~3);
 
 			offset += indirection->block_length;
-
-//			if (verbose)
-//				printf("Menu item indirection for %d bytes (block length %d bytes) at file offset: %d\n",
-//					(indirection->item)->text_len, indirection->block_length, indirection->file_offset);
 		}
 
 		indirection = indirection->next;
@@ -391,10 +365,6 @@ int data_collate_structures(int verbose)
 			validation->block_length = ((validation->string_len) + 11) & (~3);
 
 			offset += indirection->block_length;
-
-//			if (verbose)
-//				printf("Menu item validation for %d bytes (block length %d bytes) at file offset: %d\n",
-//					validation->string_len, validation->block_length, validation->file_offset);
 		}
 	}
 
