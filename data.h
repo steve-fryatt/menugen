@@ -13,6 +13,8 @@
 #define MAX_TEMPLATE_NAME 16
 
 int data_collate_structures(int verbose);
+void data_print_structure_report(void);
+int data_write_standard_menu_file(char *filename);
 
 int data_create_new_menu(char *tag, char *title);
 int data_create_new_item(char *text);

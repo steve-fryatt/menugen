@@ -52,5 +52,13 @@ int main(int argc, char *argv[])
 	printf("Collating menu data...\n");
 	data_collate_structures(verbose_output);
 
+	if (verbose_output) {
+		printf("Printing structure report...\n");
+		data_print_structure_report();
+	}
+
+	printf("Writing menu file...\n");
+	data_write_standard_menu_file(argv[2]);
+
 	return 0;
 }

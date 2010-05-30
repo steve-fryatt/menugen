@@ -18,6 +18,7 @@
 #include "data.h"
 
 #define NULL_OFFSET -1
+#define NO_SUBMENU  -1
 
 /**
  * Internal data structures, used to collect the information together
@@ -37,6 +38,7 @@ struct item_definition {
 
 	char			submenu_tag[MAX_TAG_LEN];
 	int			submenu_dbox; /* 1 if the item is a dbox. */
+	struct menu_definition	*submenu;
 
 	int			file_offset; /* Where this menu item resides. */
 
@@ -61,6 +63,8 @@ struct menu_definition {
 
 	int			items;
 	struct item_definition	*first_item;
+
+	struct submenu_data	*first_submenu;
 
 	int			file_offset; /* Where this menu resides. */
 
@@ -157,6 +161,8 @@ static struct dbox_data		*dbox_list = NULL;
 static struct menu_definition	*current_menu = NULL;
 static struct item_definition	*current_item = NULL;
 
+char *data_boolean_yes_no(int value);
+
 /**
  * Go through the assembled menu structures, filling in the missing data and
  * getting the contents ready to write out the menu block.
@@ -191,9 +197,45 @@ int data_collate_structures(int verbose)
 	while (menu != NULL) {
 		item = menu->first_item;
 
-		if (verbose) {
-			printf("Menu: '%s'\n", menu->tag);
-			printf("  Title: '%s'\n", menu->title);
+//		if (verbose) {
+//			printf("Menu: '%s'\n", menu->tag);
+//			printf("  Title: '%s'\n", menu->title);
+//		}
+
+		/* Create a dummy menu item if there isn't one. */
+
+		if (item == NULL) {
+			item = (struct item_definition *) malloc(sizeof(struct item_definition));
+
+			if (item != NULL) {
+				item->text = (char *) malloc(1);
+
+				if (item->text == NULL) {
+					free(item);
+					item = NULL;
+				} else {
+					*(item->text) = '\0';
+					item->validation = NULL;
+					item->text_len = 0;
+
+					item->file_offset = NULL_OFFSET;
+
+					item->menu_flags = 0;
+					item->icon_flags = wimp_ICON_FILLED;
+
+					*(item->submenu_tag) = '\0';
+					item->submenu_dbox = 0;
+
+					item->icon_foreground = wimp_COLOUR_BLACK;
+					item->icon_background = wimp_COLOUR_WHITE;
+
+					item->next = NULL;
+
+					menu->first_item = item;
+
+					(menu->items)++;
+				}
+			}
 		}
 
 		/* Indirect the title data. */
@@ -209,8 +251,8 @@ int data_collate_structures(int verbose)
 				indirection_list = indirection;
 			}
 
-			if (verbose)
-				printf("    Indirected title length: %d\n", menu->title_len);
+//			if (verbose)
+//				printf("    Indirected title length: %d\n", menu->title_len);
 		}
 
 		/* Calculate an offset for the menu block in the file. */
@@ -218,10 +260,10 @@ int data_collate_structures(int verbose)
 		menu->file_offset = offset;
 		offset += sizeof(struct file_menu_block) + (menu->items * sizeof(struct file_item_block));
 
-		if (verbose) {
-			printf("  Menu block at file offset: %d\n", menu->file_offset);
-			printf("  Menu items: %d\n", menu->items);
-		}
+//		if (verbose) {
+//			printf("  Menu block at file offset: %d\n", menu->file_offset);
+//			printf("  Menu items: %d\n", menu->items);
+//		}
 
 		/* Scan through the menu items. */
 
@@ -237,6 +279,12 @@ int data_collate_structures(int verbose)
 
 			if (item->next == NULL)
 				item->menu_flags |= wimp_MENU_LAST;
+
+			/* Set up icon flags. */
+
+			item->icon_flags |= wimp_ICON_TEXT;
+			item->icon_flags |= (item->icon_foreground & wimp_ICON_FG_COLOUR) << wimp_ICON_FG_COLOUR_SHIFT;
+			item->icon_flags |= (item->icon_background & wimp_ICON_BG_COLOUR) << wimp_ICON_BG_COLOUR_SHIFT;
 
 			/* Record the positions of dialogue boxes and submenus. */
 
@@ -261,6 +309,8 @@ int data_collate_structures(int verbose)
 			/* Record positions of indirection and validation blocks. */
 
 			if (item->text_len > 0) {
+				item->icon_flags |= wimp_ICON_INDIRECTED;
+
 				indirection = (struct indirection_data *) malloc(sizeof(struct indirection_data));
 				if (indirection != NULL) {
 					indirection->menu = NULL;
@@ -285,15 +335,15 @@ int data_collate_structures(int verbose)
 			item->file_offset = item_offset;
 			item_offset += sizeof(struct file_item_block);
 
-			if (verbose)
-				printf("  Item block at file offset: %d\n", item->file_offset);
+//			if (verbose)
+//				printf("  Item block at file offset: %d\n", item->file_offset);
 
 			item = item->next;
 		}
 
 		menu->item_width = width*16 + 16;
-		if (verbose)
-			printf ("  Width: %d units (%d characters)\n", menu->item_width, width);
+//		if (verbose)
+//			printf ("  Width: %d units (%d characters)\n", menu->item_width, width);
 
 		menu = menu->next;
 	}
@@ -312,18 +362,18 @@ int data_collate_structures(int verbose)
 
 			offset += indirection->block_length;
 
-			if (verbose)
-				printf("Menu title indirection for %d bytes (block length %d bytes) at file offset: %d\n",
-					(indirection->menu)->title_len, indirection->block_length, indirection->file_offset);
+//			if (verbose)
+//				printf("Menu title indirection for %d bytes (block length %d bytes) at file offset: %d\n",
+//					(indirection->menu)->title_len, indirection->block_length, indirection->file_offset);
 		} else if (indirection->item != NULL) {
 			indirection->file_offset = offset;
 			indirection->block_length = (((indirection->item)->text_len) + 7) & (~3);
 
 			offset += indirection->block_length;
 
-			if (verbose)
-				printf("Menu item indirection for %d bytes (block length %d bytes) at file offset: %d\n",
-					(indirection->item)->text_len, indirection->block_length, indirection->file_offset);
+//			if (verbose)
+//				printf("Menu item indirection for %d bytes (block length %d bytes) at file offset: %d\n",
+//					(indirection->item)->text_len, indirection->block_length, indirection->file_offset);
 		}
 
 		indirection = indirection->next;
@@ -342,12 +392,161 @@ int data_collate_structures(int verbose)
 
 			offset += indirection->block_length;
 
-			if (verbose)
-				printf("Menu item validation for %d bytes (block length %d bytes) at file offset: %d\n",
-					validation->string_len, validation->block_length, validation->file_offset);
+//			if (verbose)
+//				printf("Menu item validation for %d bytes (block length %d bytes) at file offset: %d\n",
+//					validation->string_len, validation->block_length, validation->file_offset);
 		}
 	}
 
+
+	return 0;
+}
+
+
+/**
+ * Print details of the menu structures to stdout.
+ *
+ */
+
+void data_print_structure_report(void)
+{
+	struct menu_definition	*menu;
+	struct item_definition	*item;
+	struct indirection_data	*indirection;
+	struct validation_data	*validation;
+	struct submenu_data	*submenu;
+	struct dbox_data	*dbox;
+
+	menu = menu_list;
+
+	if (menu != NULL)
+		printf("--------------------------------------------------------------------------------\n");
+
+	while (menu != NULL) {
+		printf("Menu tag:             %s\n", menu->tag);
+		printf("Title:                %s\n", menu->title);
+		printf("Indirected:           %s\n", data_boolean_yes_no(menu->title_len > 0));
+		if (menu->title_len > 0)
+			printf("Indirected length:    %d bytes\n", menu->title_len);
+		printf("Reversed:             %s\n", data_boolean_yes_no(menu->reversed));
+		printf("Item width:           %d OS units\n", menu->item_width);
+		printf("Item height:          %d OS units\n", menu->item_height);
+		printf("Item gap:             %d OS units\n", menu->item_gap);
+		printf("Title foreground:     Colour %d\n", menu->title_foreground);
+		printf("Title background:     Colour %d\n", menu->title_background);
+		printf("Work Area foreground: Colour %d\n", menu->work_area_foreground);
+		printf("Work Area foreground: Colour %d\n", menu->work_area_background);
+		printf("File block offset:    %d bytes\n", menu->file_offset);
+		printf("Items:                %d\n", menu->items);
+
+		item = menu->first_item;
+
+		while (item != NULL) {
+			printf("  ------------------------------------------------------------------------------\n");
+			printf("  Item text:          %s\n", item->text);
+			printf("  Indirected:         %s\n", data_boolean_yes_no(item->text_len > 0));
+			if (item->text_len > 0)
+				printf("  Indirected length:  %d bytes\n", item->text_len);
+			if (item->validation != NULL)
+				printf("  Validation string:  %s\n", item->validation);
+			if (*(item->submenu_tag) != '\0') {
+				if (item->submenu_dbox) {
+					printf ("  Dialogue box:       %s\n", item->submenu_tag);
+				} else {
+					printf ("  Submenu:            %s\n", item->submenu_tag);
+				}
+			}
+			printf("  Ticked:             %s\n", data_boolean_yes_no(item->menu_flags & wimp_MENU_TICKED));
+			printf("  Dotted:             %s\n", data_boolean_yes_no(item->menu_flags & wimp_MENU_SEPARATE));
+			printf("  Shaded:             %s\n", data_boolean_yes_no(item->icon_flags & wimp_ICON_SHADED));
+			printf("  Writable:           %s\n", data_boolean_yes_no(item->menu_flags & wimp_MENU_WRITABLE));
+			printf("  Sprite:             %s\n", data_boolean_yes_no(item->icon_flags & wimp_ICON_SPRITE));
+			if (item->icon_flags & wimp_ICON_SPRITE)
+				printf("  Half size:          %s\n", data_boolean_yes_no(item->menu_flags & wimp_ICON_HALF_SIZE));
+			printf("  Submenu message:    %s\n", data_boolean_yes_no(item->menu_flags & wimp_MENU_GIVE_WARNING));
+			printf("  Always open:        %s\n", data_boolean_yes_no(item->menu_flags & wimp_MENU_SUB_MENU_WHEN_SHADED));
+			printf("  Item foreground:    Colour %d\n", item->icon_foreground);
+			printf("  Item background:    Colour %d\n", item->icon_background);
+			printf("  File block offset:  %d bytes\n", item->file_offset);
+
+			item = item->next;
+		}
+
+		printf("--------------------------------------------------------------------------------\n");
+
+		menu = menu->next;
+	}
+}
+
+/**
+ * Write a menu definition file.
+ *
+ * Param:  *filename	The file to write.
+ * Return:		0 if the file was created OK; else 1;
+ */
+
+int data_write_standard_menu_file(char *filename)
+{
+	FILE			*file;
+	struct menu_definition	*menu;
+	struct item_definition	*item;
+
+	struct file_head_block	head_block;
+	struct file_menu_block	menu_block;
+	struct file_item_block	item_block;
+
+	file = fopen(filename, "w");
+
+	if (file == NULL)
+		return 1;
+
+	/* Write the file header. */
+
+	head_block.dialogues = NULL_OFFSET;
+	head_block.indirected = NULL_OFFSET;
+	head_block.validation = NULL_OFFSET;
+
+	fwrite(&head_block, sizeof(struct file_head_block), 1, file);
+
+	/* Write the menu blocks. */
+
+	menu = menu_list;
+
+	while (menu != NULL) {
+		if (menu->next == NULL)
+			menu_block.next = NULL_OFFSET;
+		else
+			menu_block.next = (menu->next)->file_offset;
+
+		menu_block.submenus = NULL_OFFSET;
+
+
+		menu_block.title_fg = (wimp_colour) menu->title_foreground;
+		menu_block.title_bg = (wimp_colour) menu->title_background;
+		menu_block.work_fg = (wimp_colour) menu->work_area_foreground;
+		menu_block.work_bg = (wimp_colour) menu->work_area_background;
+		menu_block.width = menu->item_width;
+		menu_block.height = menu->item_height;
+		menu_block.gap = menu->item_gap;
+
+		fwrite(&menu_block, sizeof(struct file_menu_block), 1, file);
+
+		item = menu->first_item;
+
+		while (item != NULL) {
+			item_block.menu_flags = item->menu_flags;
+			item_block.icon_flags = item->icon_flags;
+			item_block.submenu_file_offset = NO_SUBMENU;
+
+			fwrite(&item_block, sizeof(struct file_item_block), 1, file);
+
+			item = item->next;
+		}
+
+		menu = menu->next;
+	}
+
+	fclose(file);
 
 	return 0;
 }
@@ -359,7 +558,7 @@ int data_collate_structures(int verbose)
  *
  * Param:  *tag		The internal tag used to identify the menu.
  * Param:  *title	The menu title.
- * Return:		0 if the menu created OK; else false.
+ * Return:		0 if the menu created OK; else 1.
  */
 
 int data_create_new_menu(char *tag, char *title)
@@ -456,7 +655,7 @@ int data_create_new_item(char *text)
 	item->file_offset = NULL_OFFSET;
 
 	item->menu_flags = 0;
-	item->icon_flags = 0;
+	item->icon_flags = wimp_ICON_FILLED;
 
 	*(item->submenu_tag) = '\0';
 	item->submenu_dbox = 0;
@@ -752,3 +951,16 @@ int data_set_item_shaded(void)
 	return 0;
 }
 
+
+/**
+ * Return a pointer to "Yes" or "No" depending upon the boolean state
+ * of value.
+ *
+ * Param:		Boolean value to translate into text.
+ * Return:		"Yes" or "No".
+ */
+
+char *data_boolean_yes_no(int value)
+{
+	return (value) ? "Yes" : "No";
+}
