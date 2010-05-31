@@ -562,10 +562,14 @@ void data_print_structure_report(void)
 int data_write_standard_menu_file(char *filename)
 {
 	FILE				*file;
+
+	int				offset;
+
 	struct menu_definition		*menu;
 	struct item_definition		*item;
 	struct indirection_data		*indirection;
 	struct validation_data		*validation;
+	struct dbox_data		*dbox, *tail;
 
 	struct file_head_block		head_block;
 	struct file_menu_block		menu_block;
@@ -712,6 +716,44 @@ int data_write_standard_menu_file(char *filename)
 
 	free(indirection_block);
 	free(validation_block);
+
+	/* Output dialogue box details. */
+
+	if (dbox_list != NULL) {
+		printf("Dialogue boxes required in order:\n");
+
+		/**
+		 * This is messy, as the list must be printed in reverse order
+		 * so that it is compatible with the way that the original
+		 * BASIC versions of MenuGen worked.
+		 */
+
+		tail = NULL;
+		offset = 0;
+
+		while (tail != dbox_list) {
+			dbox = dbox_list;
+
+			while (dbox != NULL && dbox->next != tail)
+				dbox = dbox->next;
+
+			printf("%4d : %s\n", 4*offset++, (dbox->item)->submenu_tag);
+
+			tail = dbox;
+		}
+	}
+
+	/* Output the list of menus in data block order. */
+
+	printf("Menus created in order:\n");
+
+	menu = menu_list;
+	offset = 0;
+
+	while (menu != NULL) {
+		printf("%4d : %s (%s)\n", 4*offset++, menu->tag, menu->title);
+		menu = menu->next;
+	}
 
 	return 0;
 }
