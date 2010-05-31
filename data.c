@@ -109,6 +109,12 @@ struct dbox_data {
 	struct dbox_data	*next;
 };
 
+struct dbox_chain_data {
+	char			*tag;
+
+	struct dbox_chain_data	*next;
+};
+
 /**
  * Standard file data structures, used to build the standard menu file.
  */
@@ -164,12 +170,23 @@ struct file_validation_block {
 	char		data[];		/* Placeholder! */
 };
 
+struct file_dialogue_head_block {
+	int		zero;
+};
+
+struct file_dialogue_tag_block {
+	int		dialogues;
+	char		tag[];		/* Placeholder! */
+};
+
+
 
 static struct menu_definition	*menu_list = NULL;
 static struct indirection_data	*indirection_list = NULL;
 static struct validation_data	*validation_list = NULL;
 static struct submenu_data	*submenu_list = NULL;
 static struct dbox_data		*dbox_list = NULL;
+static struct dbox_chain_data	*dbox_chain_list = NULL;
 
 static struct menu_definition	*current_menu = NULL;
 static struct item_definition	*current_item = NULL;
@@ -180,6 +197,7 @@ static int			longest_indirection = 0;
 static int			longest_validation = 0;
 
 struct menu_definition		*data_find_menu_from_tag(char *tag);
+struct dbox_chain_data		*data_find_dbox_chain_from_tag(char *tag);
 char				*data_boolean_yes_no(int value);
 
 /**
@@ -198,6 +216,7 @@ int data_collate_structures(int verbose)
 	struct validation_data	*validation;
 	struct submenu_data	*submenu;
 	struct dbox_data	*dbox;
+	struct dbox_chain_data	*dbox_chain;
 	int			width, offset, item_offset, chain;
 
 	if (menu_list == NULL)
@@ -304,6 +323,16 @@ int data_collate_structures(int verbose)
 						dbox->item = item;
 						dbox->next = dbox_list;
 						dbox_list = dbox;
+
+						dbox_chain = data_find_dbox_chain_from_tag(item->submenu_tag);
+						if (dbox_chain == NULL) {
+							dbox_chain = (struct dbox_chain_data *) malloc(sizeof(struct dbox_chain_data));
+							if (dbox_chain != NULL) {
+								dbox_chain->tag = item->submenu_tag; /* Point to the data in the item block. */
+								dbox_chain->next = dbox_chain_list;
+								dbox_chain_list = dbox_chain;
+							}
+						}
 					}
 				} else {
 
@@ -476,6 +505,25 @@ struct menu_definition *data_find_menu_from_tag(char *tag)
 	return menu;
 }
 
+/**
+ * Return the dbox chain block corresponding to the given tag.
+ *
+ * Param:  *tag		The tag to find a block for.
+ * Return:		A pointer to the dbox chain block; or NULL if not found.
+ */
+
+struct dbox_chain_data		*data_find_dbox_chain_from_tag(char *tag)
+{
+	struct dbox_chain_data	*dbox_chain;
+
+	dbox_chain = dbox_chain_list;
+
+	while (dbox_chain != NULL && strcmp(tag, dbox_chain->tag) != 0)
+		dbox_chain = dbox_chain->next;
+
+	return dbox_chain;
+}
+
 
 /**
  * Print details of the menu structures to stdout.
@@ -490,11 +538,15 @@ void data_print_structure_report(void)
 	struct validation_data	*validation;
 	struct submenu_data	*submenu;
 	struct dbox_data	*dbox;
+	struct dbox_chain_data	*dbox_chain;
 
 	menu = menu_list;
 
-	if (menu != NULL)
+	if (menu != NULL) {
+		printf("================================================================================\n");
+		printf("Menu Blocks\n");
 		printf("--------------------------------------------------------------------------------\n");
+	}
 
 	while (menu != NULL) {
 		printf("Menu tag:             %s\n", menu->tag);
@@ -549,6 +601,22 @@ void data_print_structure_report(void)
 		printf("--------------------------------------------------------------------------------\n");
 
 		menu = menu->next;
+	}
+
+	dbox_chain = dbox_chain_list;
+
+	if (dbox_chain != NULL) {
+		printf("================================================================================\n");
+		printf("Dialogue Box Chain\n");
+		printf("--------------------------------------------------------------------------------\n");
+	}
+
+	while (dbox_chain != NULL) {
+		printf("Box tag:              %s\n", dbox_chain->tag);
+
+		printf("--------------------------------------------------------------------------------\n");
+
+		dbox_chain = dbox_chain->next;
 	}
 }
 
