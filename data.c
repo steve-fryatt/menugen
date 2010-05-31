@@ -422,7 +422,7 @@ int data_collate_structures(int verbose)
 		} else if (indirection->item != NULL) {
 			indirection->file_offset = offset;
 			indirection->block_length = (((indirection->item)->text_len) + 7) & (~3);
-			indirection->target = (indirection->item)->file_offset + 20;
+			indirection->target = (indirection->item)->file_offset + 12;
 
 			offset += indirection->block_length;
 		}
