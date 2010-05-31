@@ -37,13 +37,29 @@ static int embed_dialogue_names = 0;
 
 int main(int argc, char *argv[])
 {
+	int	param, param_error = 0;
+
 	stack_initialise(MAX_STACK_SIZE);
 
 	printf("MenuGen 2.00 - %s\n", BUILD_DATE);
 	printf("Copyright Stephen Fryatt, 2010\n");
 
-	if (argc != 3) {
-		printf("Usage: menugen <sourcefile> <output>\n");
+	if (argc < 3)
+		param_error = 1;
+
+	if (!param_error) {
+		for (param = 3; param < argc; param++) {
+			if (strcmp(argv[param], "-d") == 0)
+				embed_dialogue_names = 1;
+			else if (strcmp(argv[param], "-v") == 0)
+				verbose_output = 1;
+			else
+				param_error = 1;
+		}
+	}
+
+	if (param_error) {
+		printf("Usage: menugen <sourcefile> <output> [-d] [-v]\n");
 		return 1;
 	}
 
