@@ -77,6 +77,7 @@ struct indirection_data {
 
 	int			file_offset;
 	int			block_length;
+	int			target;
 
 	struct indirection_data	*next;
 };
@@ -88,6 +89,7 @@ struct validation_data {
 
 	int			file_offset;
 	int			block_length;
+	int			target;
 
 	struct validation_data	*next;
 };
@@ -110,7 +112,7 @@ struct dbox_data {
 
 struct file_head_block {
 	int		dialogues;
-	int		indirected;
+	int		indirection;
 	int		validation;
 };
 
@@ -118,10 +120,10 @@ struct file_menu_block {
 	int		next;
 	int		submenus;
 	union {
-		char		text [12];
+		char		text[12];
 		struct {
-			char		*text;
-			byte		reserved [8];
+			byte		reserved[8];
+			int		size;
 		} indirected_text;
 	} title_data;
 	wimp_colour	title_fg;
@@ -137,18 +139,24 @@ struct file_item_block {
 	wimp_menu_flags	menu_flags;
 	int		submenu_file_offset;
 	wimp_icon_flags	icon_flags;
-	wimp_icon_data	data;
+	union {
+		char		text[12];
+		struct {
+			byte		reserved[8];
+			int		size;
+		} indirected_text;
+	} icon_data;
 };
 
 struct file_indirection_block {
 	int		location;
-	char		data[];
+	char		data[];		/* Placeholder! */
 };
 
 struct file_validation_block {
 	int		location;
 	int		length;
-	char		data[];
+	char		data[];		/* Placeholder! */
 };
 
 
@@ -160,6 +168,9 @@ static struct dbox_data		*dbox_list = NULL;
 
 static struct menu_definition	*current_menu = NULL;
 static struct item_definition	*current_item = NULL;
+
+static int			longest_indirection = 0;
+static int			longest_validation = 0;
 
 char *data_boolean_yes_no(int value);
 
@@ -341,14 +352,19 @@ int data_collate_structures(int verbose)
 		if (indirection->menu != NULL) {
 			indirection->file_offset = offset;
 			indirection->block_length = (((indirection->menu)->title_len) + 7) & (~3);
+			indirection->target = (indirection->menu)->file_offset + 8;
 
 			offset += indirection->block_length;
 		} else if (indirection->item != NULL) {
 			indirection->file_offset = offset;
 			indirection->block_length = (((indirection->item)->text_len) + 7) & (~3);
+			indirection->target = (indirection->item)->file_offset + 20;
 
 			offset += indirection->block_length;
 		}
+
+		if (indirection->block_length > longest_indirection)
+			longest_indirection = indirection->block_length;
 
 		indirection = indirection->next;
 	}
@@ -363,9 +379,15 @@ int data_collate_structures(int verbose)
 		if (validation->item != NULL) {
 			validation->file_offset = offset;
 			validation->block_length = ((validation->string_len) + 11) & (~3);
+			validation->target = (validation->item)->file_offset + 16;
 
 			offset += indirection->block_length;
 		}
+
+		if (validation->block_length > longest_validation)
+			longest_validation = validation->block_length;
+
+		validation = validation->next;
 	}
 
 
@@ -457,13 +479,36 @@ void data_print_structure_report(void)
 
 int data_write_standard_menu_file(char *filename)
 {
-	FILE			*file;
-	struct menu_definition	*menu;
-	struct item_definition	*item;
+	FILE				*file;
+	int				i;
+	struct menu_definition		*menu;
+	struct item_definition		*item;
+	struct indirection_data		*indirection;
+	struct validation_data		*validation;
 
-	struct file_head_block	head_block;
-	struct file_menu_block	menu_block;
-	struct file_item_block	item_block;
+	struct file_head_block		head_block;
+	struct file_menu_block		menu_block;
+	struct file_item_block		item_block;
+
+	struct file_indirection_block	*indirection_block;
+	struct file_validation_block	*validation_block;
+
+	indirection_block = (struct file_indirection_block *) malloc(longest_indirection);
+	validation_block = (struct file_validation_block *) malloc(longest_validation);
+
+	if (indirection_block == NULL || validation_block == NULL) {
+		if (indirection_block != NULL)
+			free(indirection_block);
+		if (validation_block != NULL)
+			free(validation_block);
+
+		return 1;
+	}
+
+	for (i = 0; i < 8; i++) {
+		menu_block.title_data.indirected_text.reserved[i] = 0;
+		item_block.icon_data.indirected_text.reserved[i] = 0;
+	}
 
 	file = fopen(filename, "w");
 
@@ -473,12 +518,20 @@ int data_write_standard_menu_file(char *filename)
 	/* Write the file header. */
 
 	head_block.dialogues = NULL_OFFSET;
-	head_block.indirected = NULL_OFFSET;
-	head_block.validation = NULL_OFFSET;
+
+	if (indirection_list != NULL)
+		head_block.indirection = indirection_list->file_offset;
+	else
+		head_block.indirection = NULL_OFFSET;
+
+	if (validation_list != NULL)
+		head_block.validation = validation_list->file_offset;
+	else
+		head_block.validation = NULL_OFFSET;
 
 	fwrite(&head_block, sizeof(struct file_head_block), 1, file);
 
-	/* Write the menu blocks. */
+	/* Write the menu & item blocks. */
 
 	menu = menu_list;
 
@@ -490,6 +543,11 @@ int data_write_standard_menu_file(char *filename)
 
 		menu_block.submenus = NULL_OFFSET;
 
+		if (menu->title_len == 0) {
+			strncpy(menu_block.title_data.text, menu->title, 12);
+		} else {
+			menu_block.title_data.indirected_text.size = menu->title_len;
+		}
 
 		menu_block.title_fg = (wimp_colour) menu->title_foreground;
 		menu_block.title_bg = (wimp_colour) menu->title_background;
@@ -504,6 +562,12 @@ int data_write_standard_menu_file(char *filename)
 		item = menu->first_item;
 
 		while (item != NULL) {
+			if (item->text_len == 0) {
+				strncpy(item_block.icon_data.text, item->text, 12);
+			} else {
+				item_block.icon_data.indirected_text.size = item->text_len;
+			}
+
 			item_block.menu_flags = item->menu_flags;
 			item_block.icon_flags = item->icon_flags;
 			item_block.submenu_file_offset = NO_SUBMENU;
@@ -516,7 +580,58 @@ int data_write_standard_menu_file(char *filename)
 		menu = menu->next;
 	}
 
+	/* Write the indirected data blocks. */
+
+	indirection = indirection_list;
+
+	while (indirection != NULL) {
+		indirection_block->location = indirection->target;
+		if (indirection->menu != NULL)
+			strncpy(indirection_block->data, (indirection->menu)->title, indirection->block_length - sizeof(struct file_indirection_block));
+		else if (indirection->item != NULL)
+			strncpy(indirection_block->data, (indirection->item)->text, indirection->block_length - sizeof(struct file_indirection_block));
+		else
+			strncpy(indirection_block->data, "", indirection->block_length - sizeof(struct file_indirection_block));
+
+		fwrite(indirection_block, indirection->block_length, 1, file);
+
+		indirection = indirection->next;
+	}
+
+	if (indirection_list != NULL) {
+		indirection_block->location = NULL_OFFSET;
+		fwrite(indirection_block, 4, 1, file);
+	}
+
+	/* Write the validation string blocks. */
+
+	validation = validation_list;
+
+	while (validation != NULL) {
+		validation_block->location = validation->target;
+		validation_block->length = validation->block_length;
+		if (validation->item != NULL && (validation->item)->validation != NULL)
+			strncpy(validation_block->data, (validation->item)->validation, validation->block_length - sizeof(struct file_validation_block));
+		else
+			strncpy(validation_block->data, "", validation->block_length - sizeof(struct file_validation_block));
+
+		fwrite(validation_block, validation->block_length, 1, file);
+
+		validation = validation->next;
+	}
+
+	if (validation_list != NULL) {
+		validation_block->location = NULL_OFFSET;
+		fwrite(validation_block, 4, 1, file);
+	}
+
+	/* Write the dialogue data blocks. */
+	// \TODO
+
 	fclose(file);
+
+	free(indirection_block);
+	free(validation_block);
 
 	return 0;
 }
