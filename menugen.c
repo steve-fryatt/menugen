@@ -31,7 +31,8 @@
 
 #define MAX_STACK_SIZE 100
 
-static int verbose_output = 1;
+static int verbose_output = 0;
+static int embed_dialogue_names = 0;
 
 
 int main(int argc, char *argv[])
@@ -47,7 +48,10 @@ int main(int argc, char *argv[])
 	}
 
 	printf("Starting to parse menu definition file...\n");
-	parse_process_file(argv[1], verbose_output);
+	if (parse_process_file(argv[1], verbose_output)) {
+		printf("Errors in source file: terminating.\n");
+		return 1;
+	}
 
 	printf("Collating menu data...\n");
 	data_collate_structures(verbose_output);
