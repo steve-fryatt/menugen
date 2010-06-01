@@ -545,6 +545,9 @@ int data_collate_structures(int embed_dbox, int verbose)
 
 			dbox_chain = dbox_chain->next;
 		}
+
+		if (dbox_chain_list != NULL)
+			offset += 4;
 	}
 
 	return 0;
