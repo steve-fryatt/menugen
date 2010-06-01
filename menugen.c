@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 	}
 
 	printf("Collating menu data...\n");
-	data_collate_structures(verbose_output);
+	data_collate_structures(embed_dialogue_names, verbose_output);
 
 	if (verbose_output) {
 		printf("Printing structure report...\n");
