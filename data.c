@@ -540,6 +540,8 @@ void data_print_structure_report(void)
 	struct dbox_data	*dbox;
 	struct dbox_chain_data	*dbox_chain;
 
+	/* Print the contents of the menu structures. */
+
 	menu = menu_list;
 
 	if (menu != NULL) {
@@ -603,6 +605,29 @@ void data_print_structure_report(void)
 		menu = menu->next;
 	}
 
+	/* Print out the list of submenu links. */
+
+	submenu = submenu_list;
+
+	if (submenu != NULL) {
+		printf("================================================================================\n");
+		printf("Submenu References\n");
+		printf("--------------------------------------------------------------------------------\n");
+	}
+
+	while (submenu != NULL) {
+		if (submenu->item != NULL) {
+			printf("Item text:            %s\n", (submenu->item)->text);
+			printf("submenu tag:          %s\n", (submenu->item)->submenu_tag);
+		}
+
+		printf("--------------------------------------------------------------------------------\n");
+
+		submenu = submenu->next;
+	}
+
+	/* Print the contents of the dialogue box chain. */
+
 	dbox_chain = dbox_chain_list;
 
 	if (dbox_chain != NULL) {
@@ -618,6 +643,82 @@ void data_print_structure_report(void)
 
 		dbox_chain = dbox_chain->next;
 	}
+
+	/* Print out the list of dbox linls. */
+
+	dbox = dbox_list;
+
+	if (dbox != NULL) {
+		printf("================================================================================\n");
+		printf("Dialogue Box References\n");
+		printf("--------------------------------------------------------------------------------\n");
+	}
+
+	while (dbox != NULL) {
+		if (dbox->item != NULL) {
+			printf("Item text:            %s\n", (dbox->item)->text);
+			printf("DBox tag:             %s\n", (dbox->item)->submenu_tag);
+		}
+
+		printf("--------------------------------------------------------------------------------\n");
+
+		dbox = dbox->next;
+	}
+
+	/* Print the indirection blocks. */
+
+	indirection = indirection_list;
+
+	if (indirection != NULL) {
+		printf("================================================================================\n");
+		printf("Indirected Data Blocks\n");
+		printf("--------------------------------------------------------------------------------\n");
+	}
+
+	while (indirection != NULL) {
+		if (indirection->menu != NULL) {
+			printf("Menu title:           %s\n", (indirection->menu)->title);
+			printf("Maximum length:       %d bytes\n", (indirection->menu)->title_len);
+		} else if (indirection->item != NULL) {
+			printf("Item text:            %s\n", (indirection->item)->text);
+			printf("Maximum length:       %d bytes\n", (indirection->item)->text_len);
+		}
+
+		printf("Target offset:        %d bytes\n", indirection->target);
+		printf("Block Length in file: %d bytes\n", indirection->block_length);
+		printf("File block offset:    %d bytes\n", indirection->file_offset);
+
+		printf("--------------------------------------------------------------------------------\n");
+
+		indirection = indirection->next;
+	}
+
+	/* Print the validation blocks. */
+
+	validation = validation_list;
+
+	if (validation != NULL) {
+		printf("================================================================================\n");
+		printf("Validation Strings\n");
+		printf("--------------------------------------------------------------------------------\n");
+	}
+
+	while (validation != NULL) {
+		if (validation->item != NULL) {
+			printf("Validation string:    %s\n", (validation->item)->validation);
+		}
+
+		printf("String length:        %d bytes\n", validation->string_len);
+		printf("Target offset:        %d bytes\n", validation->target);
+		printf("Block Length in file: %d bytes\n", validation->block_length);
+		printf("File block offset:    %d bytes\n", validation->file_offset);
+
+		printf("--------------------------------------------------------------------------------\n");
+
+		validation = validation->next;
+	}
+
+	printf("================================================================================\n");
 }
 
 /**
