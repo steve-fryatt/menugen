@@ -82,7 +82,7 @@ static const struct command_def command_list[] = {
 	{"item_gap",    "I",    1, 0, 0, 0, 0, TYPE_NONE,     parse_command_item_gap},
 	{"item_height", "I",    1, 0, 0, 0, 0, TYPE_NONE,     parse_command_item_height},
 	{"menu",        "IS",   0, 0, 0, 0, 0, TYPE_MENU,     parse_command_menu},
-	{"reverse",     "",     1, 1, 0, 0, 0, TYPE_NONE,     parse_command_reverse},
+	{"reverse",     "",     1, 0, 0, 0, 0, TYPE_NONE,     parse_command_reverse},
 	{"shaded",      "",     1, 1, 0, 0, 0, TYPE_NONE,     parse_command_shaded},
 	{"sprite",      "",     1, 1, 0, 0, 0, TYPE_SPRITE,   NULL},
 	{"submenu",     "I",    1, 1, 0, 0, 0, TYPE_SUBMENU,  parse_command_submenu},
