@@ -38,6 +38,25 @@ Introduction
 Using MenuGen
 -------------
 
+  To use MenuGen, a menu definition file must be created in a text editor and
+  passed as a parameter to the "menugen" command.
+
+  menugen <source> <output> [-d] [-v]
+
+    The "menugen" command takes two parameters:
+
+    * "source" is the filename of the text file containing the menu
+      definitions.
+    * "output" is the filename to which the binary Menus file is to be
+      written.
+
+    Two option flags can also be specified:
+
+    * "-d" indicates that dialogue box name tags are to be embedded into the
+      file.
+    * "-v" specifies verbose output, where details of the file parsing and
+      data structures will be printed to screen.
+
 
 
 Menu Definition Files
@@ -51,7 +70,46 @@ Menu Definition Files
   Files are case sensitive, and commands are always in lower case.
 
   The top-level of a file consists of one or more "menu" commands, each
-  followed by a nested block containing its definition.
+  followed by a nested block containing its definition.  An example might
+  look as follows:
+
+    /* Example Menu Definition File
+     * -- for use with MenuGen 2
+     */
+
+    menu(iconbar_menu, "My App")
+    {
+      item("Info") {
+        d_box(prog_info) {
+          warning;
+        }
+        dotted;
+      }
+      item("Help") {
+        submenu(help_menu);
+      }
+      item("Choices...") {
+        dotted;
+      }
+      item("Quit");
+    }
+
+    menu(help_menu, "Help")
+    {
+      item("Use interactive help") {
+        ticked;
+        dotted;
+      }
+      item("View manual");
+      item("Visit website");
+    }
+
+
+  Top-level commands
+  ------------------
+
+  A file consists of one or more top-level commands which define the menu
+  structures.
 
   menu (tag, "title")
 
@@ -75,10 +133,15 @@ Menu Definition Files
   commands are omitted, defaults are used which conform to the Style Guide; a
   menu really needs at least one "item", otherwise it will be of little use.
 
+  Muliple "item" commands can be used to add menu items in sequence; if more
+  than one of any other command is encountered, the last one will take
+  effect.
+
   colours (title_fg, title_bg, work_fg, work_bg)
 
-    In the context of a "menu" command, the "colours" sets the colours of the
-    menu in terms of the standard Wimp colours 0 to 16.  Its parameters are:
+    In the context of a "menu" command, the "colours" command sets the
+    colours of the menu in terms of the standard Wimp colours 0 to 16.  Its
+    parameters are:
 
     * "title_fg" is the title foreground colour.
     * "title_bg" is the title background colour.
@@ -89,11 +152,11 @@ Menu Definition Files
 
   indirected (length)
 
-    In the context of a "menu" command, the "indirected" sets the title to be
-    indirected with the specified space reserved.  If the title given in the
-    "menu" command itself was longer than 12 characters it will already be
-    indirected, but the command can still be used to set the amount of space
-    reserved.
+    In the context of a "menu" command, the "indirected" command sets the
+    title to be indirected with the specified space reserved.  If the title
+    given in the "menu" command itself was longer than 12 characters it will
+    already be indirected, but the command can still be used to set the
+    amount of space reserved.
 
     * "length" specifies the number of characters to allocate, not including
       the string terminator.
@@ -117,7 +180,7 @@ Menu Definition Files
 
   item_gap (gap)
 
-    The "item_gap" sets the space between menu items, in OS units.
+    The "item_gap" command sets the space between menu items, in OS units.
 
     * "gap" specifies the space between menu items, in OS units.
 
@@ -125,7 +188,7 @@ Menu Definition Files
 
   item_height (height)
 
-    The "item_height" sets the height of the menu items, in OS units.
+    The "item_height" command sets the height of the menu items, in OS units.
 
     * "height" specifies the item height, in OS units.
 
@@ -133,15 +196,277 @@ Menu Definition Files
 
   reverse
 
-    The "reverse" sets the menu to appear reversed (opening right to left).
+    The "reverse" command sets the menu to appear reversed (opening right to
+    left).
 
     It is not implemented in this version of MenuGen, and menus always open
     left to right.
 
 
+  Item commands
+  -------------
+
+  The "item" command can be followed by a block, containing one or more of
+  the following commands to define the menu item.  If it is not, or if any
+  commands are omitted, defaults are used which conform to the Style Guide
+  and result in a standard menu entry.
+
+  If more than one instance of any command is encountered in an "item"
+  command, the last one will take effect.
+
+  colours (icon_fg, icon_bg)
+
+    In the context of an "item" command, the "colours" command sets the
+    colours of the menu in terms of the standard Wimp colours 0 to 16.  Its
+    parameters are:
+
+    * "icon_fg" is the icon foreground colour.
+    * "icon_bg" is the icon background colour.
+
+    If omitted, the default values of (7, 0) are used.
+
+  d_box (tag)
+
+    The "d_box" command specifies that the menu item leads to a dialogue box.
+    When the Menus file is loaded into an application, it will be necessary
+    to specify window handles for each box: either by tag, or in an order
+    specified by MenuGen on file compilation (depending on the compilation
+    options specified).
+
+    If required, the command can be followed by a group to specifiy further
+    options for the dialogue.
+
+    * "tag" gives an alphanumeric tag to identify the dialogue box by.  It
+      can not contain spaces.
+
+  dotted
+
+    The "dotted" command specifies that the menu item will be followed by a
+    dotted line.
+
+  indirected (length)
+
+    In the context of an "item" command, the "indirected" command sets the
+    item text to be indirected with the specified space reserved.  If the
+    text given in the "item" command itself was longer than 12 characters it
+    will already be indirected, but the command can still be used to set the
+    amount of space reserved.
+
+    * "length" specifies the number of characters to allocate, not including
+      the string terminator.
+
+    If omitted, item texts of 12 characters or less will be non-indirected
+    and those that are longer will only have buffers of the original length
+    allocated.
+
+  shaded
+
+    The "shaded" command indicates that the menu item will be shaded.
+
+  sprite
+
+    The "sprite" command indicates that the menu item will contain a sprite
+    instead of text, and can be followed by a group defining further features
+    of the sprite.
+
+    The "sprite" command is not implemented, and all menu items must be text.
+
+  submenu (tag)
+
+    The "submenu" command indicates that the menu item leads to a submenu,
+    defined elsewhere in the file by another "menu" command and identified by
+    its tag.
+
+    If required, the command can be followed by a group to specifiy further
+    options for the submenu.
+
+    * "tag" gives the tag of the menu to be linked as a submenu.
+
+  ticked
+
+    The "ticked" command indicates that the menu item should be ticked by
+    default.
+
+  writable
+
+    The "writable" command indicates that the menu item should be writable.
+    If not specified as indirected with the "indirected" command, then item
+    will be made indirected and given a length of 12 characters plus
+    terminator.
+
+    If required, the command can be followed by a group to specifiy a
+    validation string.
+
+
+  Dialogue box and submenu commands
+  ---------------------------------
+
+  The "d_box" and "submenu" commands can optionally be followed by a group
+  containing additional options for the menu item concerned.
+
+  always
+
+    The "always" command sets the item to always be traversable, even when
+    shaded.
+
+  warning
+
+    The "warning" command sets the item to return a Message_SubmenuWarning.
+
+
+  Sprite commands
+  ---------------
+
+  The "sprite" command can optionally be followed by a group containing
+  additional options affecting the sprite.
+
+  half
+
+    The "half" command sets the sprite to appear at half size.
+
+    The "half" and "sprite" commands are not implemented, and all menu items
+    must be text.
+
+
+  Writable commands
+  -----------------
+
+  The "writable" command can optionally be followed by a group containing
+  additional options for the entry.
+
+  validation ("string")
+
+    The "validation" command sets a validation string for the writable menu
+    entry.
+
+    * "string" sets the validation string.
+
+    If omitted, the writable entry will have no validation string applied.
+
+
 
 Menu Block Files
 ----------------
+
+  The Menu Block files created by MakeMenus are binary data files containing
+  snapshots of the menu block data, indirection data and validation strings,
+  along with enough other information to be able to link everything together
+  once it is loaded into memory.  The intention is that an application will
+  use OS_File 255 or an equivalent to load the data into memory, and then use
+  it in-situ.
+
+  Whenever pointers are included to identify other parts of the file, they
+  are given as offsets from the start of the file.  An offset of -1 is taken
+  to indicate "no pointer" or "end of list".
+
+
+  File header
+  -----------
+
+  The file starts with a 12-byte header, as follows:
+
+    0: Offset to dialogue list (or -1 for none)
+    4: Offset to indirected data list (or -1 for none)
+    8: Offset to validation data list (or -1 for none)
+
+  Each of these is described in its own section below.
+
+
+  Menu data
+  ---------
+
+  Starting at byte 12 are a sequence of menu data blocks.  Each consists of
+  the following data:
+
+    +0: Offset to the next menu data block (or -1 for the last block)
+    +4: Offset to the first item in the submenu list (or -1 for none)
+    +8: Start of Wimp_CreateMenu structure (ie. menu title data)
+
+  The next menu block offset points to the start of the Wimp_CreateMenu block
+  for that menu: that is, it points to the 8th byte of the data block.
+
+  The submenu list links in any menu items which use this menu block as a
+  submenu.  The offfset points to the first submenu pointer (bytes 4-7 of the
+  menu item block); each submenu pointer then contains an offset to the next
+  pointer or -1 if they are the last in the list (which must be read before
+  being replaced by the real pointer).
+
+
+  Dialogue list
+  -------------
+
+  If first word of the file is not -1, there is a list of dialogue box
+  pointers that needs to be filled in.  This can take two formats, depending
+  on whether dialogue box tags were embedded in the file when it was
+  compiled.  These lists take the same form as the submenu lists attached to
+  the menus.
+
+  If tags were not embedded (the original format), all the dialogue box
+  pointers are in a single chain and the first word points to the first
+  submenu pointer (bytes 4-7 of the menu item block) in the file.  Each
+  pointer in turn contains an offset to the next pointer, or -1 if it is the
+  last in the list.  The order that the pointers appear in the list is
+  indicated when the file is compiled by MenuGen, and the application must
+  know this in order to be able to correctly restore them.
+
+  If tags were embedded (the new format), then word 0 of the file points to
+  the start of a dialogue box tag block:
+
+    +0: Zero word to identify the new format
+    +4: Start of dialogue tag data
+
+  The first word of the data will always be zero, and since this can never be
+  in the old format chain of offsets it identifies the new format.  From byte
+  4 of the data onwards, there are a sequence of tag blocks:
+
+    +0: Offset to first item in dialogue list (or -1 for end of list)
+    +4: Tag name (zero terminated)
+
+  Each block is rounded up to the nearest multiple of four bytes.  The
+  offsets point to shorter dialogue lists (in the same format as above) which
+  contain only those items which use the dialogue whose tag is included in
+  the block.
+
+
+  Indirected data
+  ---------------
+
+  If the second word of the file is not -1, it is an offset to the indirected
+  data.  Similar to the new-format dialogue list, this is a sequence of
+  word-aligned blocks as follows:
+
+    +0: Offset to the 12 bytes of title or icon data (or -1 for end of list)
+    +4: Indirection data block
+
+  The application must traverse this list, locating the indirection pointer
+  in bytes 0-3 of the title or icon data and writing the real address of the
+  indirection block to it.  The buffer length given in bytes 8-11 of the data
+  can then be added to the 4 bytes used for the data pointer and rounded up
+  to a multiple of 4 to identify the length of the indirected data block.
+
+  The end of the indirected data is indicated by a block containing an offset
+  of -1 and no data block.
+
+
+  Validation data
+  ---------------
+
+  If the third word of the file is not -1, it is an offset to the validation
+  data.  Similar to the indirected data (described above) this is a sequence
+  of word-aligned blocks as follows:
+
+    +0: Offset to the 12 bytes of icon data (or -1 for end of list)
+    +4: Length of validation block (including 8-byte header)
+    +8: Validation data block
+
+  The application must traverse this list, locating the validation pointer in
+  bytes 4-7 of the icon data and writing the real address of the validation
+  block to it.  Unlike the indirected blocks, the block length given in the
+  second word of the block already includes the necessary word rounding, and
+  can be used to step to the next block.
+
+  The end of the validation data is indicated by a block containing an offset
+  of -1 and no data block.
 
 
 

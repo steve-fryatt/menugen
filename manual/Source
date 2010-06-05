@@ -41,6 +41,24 @@ No guarantee is made as to the suitability or stability of <cite>MenuGen</cite> 
 
 <chapter title="Using MenuGen" file="Use">
 
+To use <cite>MenuGen</cite>, a menu definition file must be created in a text editor and passed as a parameter to the <command>menugen</command> command.
+
+<comdef target="menugen" params="&lt;source&gt; &lt;output&gt; [-d] [-v]">
+
+The <command>menugen</command> command takes two parameters:
+
+<list>
+<li><command>source</command> is the filename of the text file containing the menu definitions.
+<li><command>output</command> is the filename to which the binary Menus file is to be written.
+</list>
+
+Two option flags can also be specified:
+
+<list>
+<li><command>-d</command> indicates that dialogue box name tags are to be embedded into the file.
+<li><command>-v</command> specifies verbose output, where details of the file parsing and data structures will be printed to screen.
+</list>
+</comdef>
 
 </chapter>
 
@@ -53,7 +71,46 @@ Menu definition files consist of a text file containing a series of commands. Th
 
 Files are case sensitive, and commands are always in lower case.
 
-The top-level of a file consists of one or more <command>menu</command> commands, each followed by a nested block containing its definition.
+The top-level of a file consists of one or more <command>menu</command> commands, each followed by a nested block containing its definition.  An example might look as follows:
+
+<codeblock>
+/* Example Menu Definition File
+ * -- for use with MenuGen 2
+ */
+
+menu(iconbar_menu, "My App")
+{
+  item("Info") {
+    d_box(prog_info) {
+      warning;
+    }
+    dotted;
+  }
+  item("Help") {
+    submenu(help_menu);
+  }
+  item("Choices...") {
+    dotted;
+  }
+  item("Quit");
+}
+
+menu(help_menu, "Help")
+{
+  item("Use interactive help") {
+    ticked;
+    dotted;
+  }
+  item("View manual");
+  item("Visit website");
+}
+</codeblock>
+
+
+
+<subhead title="Top-level commands">
+
+A file consists of one or more top-level commands which define the menu structures.
 
 <comdef target="menu" params="(tag, &quot;title&quot;)">
 
@@ -75,7 +132,7 @@ Muliple <command>item</command> commands can be used to add menu items in sequen
 
 <comdef target="colours" params="(title_fg, title_bg, work_fg, work_bg)">
 
-In the context of a <command>menu</command> command, the <command>colours</command> sets the colours of the menu in terms of the standard Wimp colours 0 to 16. Its parameters are:
+In the context of a <command>menu</command> command, the <command>colours</command> command sets the colours of the menu in terms of the standard Wimp colours 0 to 16. Its parameters are:
 
 <list>
 <li><command>title_fg</command> is the title foreground colour.
@@ -89,7 +146,7 @@ If omitted, the standard defaults of (7, 2, 7, 0) are used.
 
 <comdef target="indirected" params="(length)">
 
-In the context of a <command>menu</command> command, the <command>indirected</command> sets the title to be indirected with the specified space reserved. If the title given in the <command>menu</command> command itself was longer than 12 characters it will already be indirected, but the command can still be used to set the amount of space reserved.
+In the context of a <command>menu</command> command, the <command>indirected</command> command sets the title to be indirected with the specified space reserved. If the title given in the <command>menu</command> command itself was longer than 12 characters it will already be indirected, but the command can still be used to set the amount of space reserved.
 
 <list>
 <li><command>length</command> specifies the number of characters to allocate, not including the string terminator.
@@ -112,7 +169,7 @@ The <command>item</command> command can optionally be followed by a block contai
 
 <comdef target="item_gap" params="(gap)">
 
-The <command>item_gap</command> sets the space between menu items, in OS units.
+The <command>item_gap</command> command sets the space between menu items, in OS units.
 
 <list>
 <li><command>gap</command> specifies the space between menu items, in OS units.
@@ -124,7 +181,7 @@ If omitted, the gap is a standard 0 units.
 
 <comdef target="item_height" params="(height)">
 
-The <command>item_height</command> sets the height of the menu items, in OS units.
+The <command>item_height</command> command sets the height of the menu items, in OS units.
 
 <list>
 <li><command>height</command> specifies the item height, in OS units.
@@ -136,7 +193,7 @@ If omitted, the height is a standard 44 units.
 
 <comdef target="reverse">
 
-The <command>reverse</command> sets the menu to appear reversed (opening right to left).
+The <command>reverse</command> command sets the menu to appear reversed (opening right to left).
 
 It is not implemented in this version of MenuGen, and menus always open left to right.
 </comdef>
@@ -144,6 +201,128 @@ It is not implemented in this version of MenuGen, and menus always open left to 
 
 <subhead title="Item commands">
 
+The <command>item</command> command can be followed by a block, containing one or more of the following commands to define the menu item.  If it is not, or if any commands are omitted, defaults are used which conform to the <cite>Style Guide</cite> and result in a standard menu entry.
+
+If more than one instance of any command is encountered in an <command>item</command> command, the last one will take effect.
+
+<comdef target="colours" params="(icon_fg, icon_bg)">
+
+In the context of an <command>item</command> command, the <command>colours</command> command sets the colours of the menu in terms of the standard Wimp colours 0 to 16. Its parameters are:
+
+<list>
+<li><command>icon_fg</command> is the icon foreground colour.
+<li><command>icon_bg</command> is the icon background colour.
+</list>
+
+If omitted, the default values of (7, 0) are used.
+</comdef>
+
+<comdef target="d_box" params="(tag)">
+
+The <command>d_box</command> command specifies that the menu item leads to a dialogue box. When the Menus file is loaded into an application, it will be necessary to specify window handles for each box: either by tag, or in an order specified by <cite>MenuGen</cite> on file compilation (depending on the compilation options specified).
+
+If required, the command can be followed by a group to specifiy further options for the dialogue.
+
+<list>
+<li><command>tag</command> gives an alphanumeric tag to identify the dialogue box by. It can not contain spaces.
+</list>
+</comdef>
+
+<comdef target="dotted">
+
+The <command>dotted</command> command specifies that the menu item will be followed by a dotted line.
+</comdef>
+
+
+<comdef target="indirected" params="(length)">
+
+In the context of an <command>item</command> command, the <command>indirected</command> command sets the item text to be indirected with the specified space reserved. If the text given in the <command>item</command> command itself was longer than 12 characters it will already be indirected, but the command can still be used to set the amount of space reserved.
+
+<list>
+<li><command>length</command> specifies the number of characters to allocate, not including the string terminator.
+</list>
+
+If omitted, item texts of 12 characters or less will be non-indirected and those that are longer will only have buffers of the original length allocated.
+</comdef>
+
+
+<comdef target="shaded">
+
+The <command>shaded</command> command indicates that the menu item will be shaded.
+</comdef>
+
+<comdef target="sprite">
+
+The <command>sprite</command> command indicates that the menu item will contain a sprite instead of text, and can be followed by a group defining further features of the sprite.
+
+The <command>sprite</command> command is not implemented, and all menu items must be text.
+</comdef>
+
+<comdef target="submenu" params="(tag)">
+
+The <command>submenu</command> command indicates that the menu item leads to a submenu, defined elsewhere in the file by another <command>menu</command> command and identified by its tag.
+
+If required, the command can be followed by a group to specifiy further options for the submenu.
+
+<list>
+<li><command>tag</command> gives the tag of the menu to be linked as a submenu.
+</list>
+</comdef>
+
+<comdef target="ticked">
+
+The <command>ticked</command> command indicates that the menu item should be ticked by default.
+</comdef>
+
+<comdef target="writable">
+
+The <command>writable</command> command indicates that the menu item should be writable. If not specified as indirected with the <command>indirected</command> command, then item will be made indirected and given a length of 12 characters plus terminator.
+
+If required, the command can be followed by a group to specifiy a validation string.
+</comdef>
+
+
+<subhead title="Dialogue box and submenu commands">
+
+The <command>d_box</command> and <command>submenu</command> commands can optionally be followed by a group containing additional options for the menu item concerned.
+
+<comdef target="always">
+
+The <command>always</command> command sets the item to always be traversable, even when shaded.
+</comdef>
+
+<comdef target="warning">
+
+The <command>warning</command> command sets the item to return a Message_SubmenuWarning.
+</comdef>
+
+
+<subhead title="Sprite commands">
+
+The <command>sprite</command> command can optionally be followed by a group containing additional options affecting the sprite.
+
+<comdef target="half">
+
+The <command>half</command> command sets the sprite to appear at half size.
+
+The <command>half</command> and <command>sprite</command> commands are not implemented, and all menu items must be text.
+</comdef>
+
+
+<subhead title="Writable commands">
+
+The <command>writable</command> command can optionally be followed by a group containing additional options for the entry.
+
+<comdef target="validation" params="(&quot;string&quot;)">
+
+The <command>validation</command> command sets a validation string for the writable menu entry.
+
+<list>
+<li><command>string</command> sets the validation string.
+</list>
+
+If omitted, the writable entry will have no validation string applied.
+</comdef>
 
 </chapter>
 
@@ -152,6 +331,89 @@ It is not implemented in this version of MenuGen, and menus always open left to 
 
 <chapter title="Menu Block Files" file="MenuFiles">
 
+The Menu Block files created by <cite>MakeMenus</cite> are binary data files containing snapshots of the menu block data, indirection data and validation strings, along with enough other information to be able to link everything together once it is loaded into memory. The intention is that an application will use OS_File 255 or an equivalent to load the data into memory, and then use it in-situ.
+
+Whenever pointers are included to identify other parts of the file, they are given as offsets from the start of the file.  An offset of -1 is taken to indicate &quot;no pointer&quot; or &quot;end of list&quot;.
+
+
+<subhead title="File header">
+
+The file starts with a 12-byte header, as follows:
+
+<codeblock>
+0: Offset to dialogue list (or -1 for none)
+4: Offset to indirected data list (or -1 for none)
+8: Offset to validation data list (or -1 for none)
+</codeblock>
+
+Each of these is described in its own section below.
+
+
+<subhead title="Menu data">
+
+Starting at byte 12 are a sequence of menu data blocks.  Each consists of the following data:
+
+<codeblock>
++0: Offset to the next menu data block (or -1 for the last block)
++4: Offset to the first item in the submenu list (or -1 for none)
++8: Start of Wimp_CreateMenu structure (ie. menu title data)
+</codeblock>
+
+The next menu block offset points to the start of the Wimp_CreateMenu block for that menu: that is, it points to the 8th byte of the data block.
+
+The submenu list links in any menu items which use this menu block as a submenu.  The offfset points to the first submenu pointer (bytes 4-7 of the menu item block); each submenu pointer then contains an offset to the next pointer or -1 if they are the last in the list (which must be read before being replaced by the real pointer).
+
+
+<subhead title="Dialogue list">
+
+If first word of the file is not -1, there is a list of dialogue box pointers that needs to be filled in. This can take two formats, depending on whether dialogue box tags were embedded in the file when it was compiled.  These lists take the same form as the submenu lists attached to the menus.
+
+If tags were not embedded (the original format), all the dialogue box pointers are in a single chain and the first word points to the first submenu pointer (bytes 4-7 of the menu item block) in the file.  Each pointer in turn contains an offset to the next pointer, or -1 if it is the last in the list.  The order that the pointers appear in the list is indicated when the file is compiled by <cite>MenuGen</cite>, and the application must know this in order to be able to correctly restore them.
+
+If tags were embedded (the new format), then word 0 of the file points to the start of a dialogue box tag block:
+
+<codeblock>
++0: Zero word to identify the new format
++4: Start of dialogue tag data
+</codeblock>
+
+The first word of the data will always be zero, and since this can never be in the old format chain of offsets it identifies the new format.  From byte 4 of the data onwards, there are a sequence of tag blocks:
+
+<codeblock>
++0: Offset to first item in dialogue list (or -1 for end of list)
++4: Tag name (zero terminated)
+</codeblock>
+
+Each block is rounded up to the nearest multiple of four bytes.  The offsets point to shorter dialogue lists (in the same format as above) which contain only those items which use the dialogue whose tag is included in the block.
+
+
+<subhead title="Indirected data">
+
+If the second word of the file is not -1, it is an offset to the indirected data.  Similar to the new-format dialogue list, this is a sequence of word-aligned blocks as follows:
+
+<codeblock>
++0: Offset to the 12 bytes of title or icon data (or -1 for end of list)
++4: Indirection data block
+</codeblock>
+
+The application must traverse this list, locating the indirection pointer in bytes 0-3 of the title or icon data and writing the real address of the indirection block to it.  The buffer length given in bytes 8-11 of the data can then be added to the 4 bytes used for the data pointer and rounded up to a multiple of 4 to identify the length of the indirected data block.
+
+The end of the indirected data is indicated by a block containing an offset of -1 and no data block.
+
+
+<subhead title="Validation data">
+
+If the third word of the file is not -1, it is an offset to the validation data.  Similar to the indirected data (described above) this is a sequence of word-aligned blocks as follows:
+
+<codeblock>
++0: Offset to the 12 bytes of icon data (or -1 for end of list)
++4: Length of validation block (including 8-byte header)
++8: Validation data block
+</codeblock>
+
+The application must traverse this list, locating the validation pointer in bytes 4-7 of the icon data and writing the real address of the validation block to it.  Unlike the indirected blocks, the block length given in the second word of the block already includes the necessary word rounding, and can be used to step to the next block.
+
+The end of the validation data is indicated by a block containing an offset of -1 and no data block.
 
 </chapter>
 
