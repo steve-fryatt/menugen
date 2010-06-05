@@ -1,9 +1,10 @@
-# Makefile for PrintPDF
+# Makefile for MenuGen
 #
 # Copyright 2010, Stephen Fryatt
 #
 # This file really needs to be run by GNUMake.
-# It is intended for cross-compilation under the GCCSDK.
+# It is intended for native compilation on Linux (for use in a GCCSDK
+# environment) or cross-compilation under the GCCSDK.
 
 .PHONY: all clean documentation release install
 
