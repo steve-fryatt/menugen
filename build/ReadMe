@@ -1,0 +1,178 @@
+=============================================================================
+MenuGen - Create Menus for RISC OS Applications                  Version 2.00
+
+(c) Stephen Fryatt, 2010                                          5 June 2010
+=============================================================================
+
+
+License
+-------
+
+  MenuGen is FREEWARE.  Copyright is held by the author, Stephen Fryatt,
+  2010.
+
+  MenuGen may be copied freely, so long as it remains unaltered with all its
+  files and documentation intact.
+
+  If you wish to distribute MenuGen, please contact me to get my permission.
+  This is so that I can ensure that you have the latest version available.
+  PrintPDF may not be sold, although Public Domain libraries may charge for
+  the cost of discs.
+
+  No guarantee is made as to the suitability or stability of MenuGen or its
+  assocuated libraries for any particular purpose.  No liability can be
+  accepted by the author for any loss or damage caused by the use of MenuGen.
+
+
+
+Introduction
+------------
+
+  MenuGen provides a means of building RISC OS menus into a form of "Template
+  File" which can be loaded into an application's workspace and passed
+  directly to "Wimp_CreateMenu".  Items such as indirected data buffers are
+  handled automatically.
+
+
+
+Using MenuGen
+-------------
+
+
+
+Menu Definition Files
+---------------------
+
+  Menu definition files consist of a text file containing a series of
+  commands.  The syntax is C-like, so that commands are terminated with
+  semi-colons and nested with braces ('{' and '}').  Comments can be included
+  in the files by enclosing them within "/*" and "*/".
+
+  Files are case sensitive, and commands are always in lower case.
+
+  The top-level of a file consists of one or more "menu" commands, each
+  followed by a nested block containing its definition.
+
+  menu (tag, "title")
+
+    The "menu" command defines a new, empty menu.  It takes two parameters:
+
+    * "tag" is a alphanumeric tag, which will be used to identify the menu
+      within MenuGen.  It can not contian spaces.
+    * "title" is the menu title.  If longer than 12 characters, it will
+      automatically become indirected.
+
+    The "menu" command can be followed by a block, containing the menu
+    definition; if it is not, a default menu containing a single empty item
+    will be created.
+
+
+  Menu commands
+  -------------
+
+  The "menu" command can be followed by a block, containing one or more of
+  the following commands to define the menu.  If it is not, or if any
+  commands are omitted, defaults are used which conform to the Style Guide; a
+  menu really needs at least one "item", otherwise it will be of little use.
+
+  colours (title_fg, title_bg, work_fg, work_bg)
+
+    In the context of a "menu" command, the "colours" sets the colours of the
+    menu in terms of the standard Wimp colours 0 to 16.  Its parameters are:
+
+    * "title_fg" is the title foreground colour.
+    * "title_bg" is the title background colour.
+    * "work_fg" is the work area foreground colour.
+    * "work_bg" is the work area background colour.
+
+    If omitted, the standard defaults of (7, 2, 7, 0) are used.
+
+  indirected (length)
+
+    In the context of a "menu" command, the "indirected" sets the title to be
+    indirected with the specified space reserved.  If the title given in the
+    "menu" command itself was longer than 12 characters it will already be
+    indirected, but the command can still be used to set the amount of space
+    reserved.
+
+    * "length" specifies the number of characters to allocate, not including
+      the string terminator.
+
+    If omitted, titles of 12 characters or less will be non-indirected and
+    those that are longer will only have buffers of the original length
+    allocated.
+
+  item ("text")
+
+    The "item" command defines a new menu item: each "menu" command can
+    contain one or more, which will be taken in the order they appear.  It
+    takes one parameter:
+
+    * "text" is the menu item text.  If longer than 12 characters, it will
+      automatically become indirected.
+
+    The "item" command can optionally be followed by a block containing more
+    details; if it is not, a default text entry is created which conforms to
+    the Style Guide.
+
+  item_gap (gap)
+
+    The "item_gap" sets the space between menu items, in OS units.
+
+    * "gap" specifies the space between menu items, in OS units.
+
+    If omitted, the gap is a standard 0 units.
+
+  item_height (height)
+
+    The "item_height" sets the height of the menu items, in OS units.
+
+    * "height" specifies the item height, in OS units.
+
+    If omitted, the height is a standard 44 units.
+
+  reverse
+
+    The "reverse" sets the menu to appear reversed (opening right to left).
+
+    It is not implemented in this version of MenuGen, and menus always open
+    left to right.
+
+
+
+Menu Block Files
+----------------
+
+
+
+Version History
+---------------
+
+  Here is a list of the versions of PrintPDF, along with all the changes
+  made.
+
+
+  1.00 (17 February 2001)
+  -----------------------
+
+  Original BBC BASIC code.
+
+
+  2.00 (5 June 2010)
+  ------------------
+
+  Rewritten in C for use with GCCSDK.
+
+
+
+Updates and Contacting Me
+-------------------------
+
+  If you have any comments about MenuGen, or would like to report any bugs
+  that you find, you can email me at the address below.
+
+  Updates to MenuGen and more software for RISC OS computers can be found
+  on my website at http://www.stevefryatt.org.uk/software/
+
+  Stephen Fryatt
+  email: steve@stevefryatt.org.uk
