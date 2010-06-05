@@ -70,7 +70,7 @@ static int parse_command_writable(char params[][MAX_PARAM_LEN]);
 #define COMMANDS 20
 
 static const struct command_def command_list[] = {
-	{"always",      "",     1, 1, 0, 0, 0, TYPE_NONE,     parse_command_always},
+	{"always",      "",     1, 1, 1, 0, 0, TYPE_NONE,     parse_command_always},
 	{"colours",     "IIII", 1, 0, 0, 0, 0, TYPE_NONE,     parse_command_colours_menu},
 	{"colours",     "II",   1, 1, 0, 0, 0, TYPE_NONE,     parse_command_colours_item},
 	{"d_box",       "I",    1, 1, 0, 0, 0, TYPE_SUBMENU,  parse_command_dbox},
