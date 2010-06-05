@@ -129,7 +129,7 @@ release: clean all
 # Install the finished version in the GCCSDK, ready for use.
 
 install: clean all
-	$(CP) $(OUTDIR)/$(RUMIMAGE) $(SFBIN)
+	$(CP) -r $(OUTDIR)/$(RUMIMAGE) $(SFBIN)
 
 
 # Clean targets
