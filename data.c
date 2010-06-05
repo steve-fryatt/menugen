@@ -536,7 +536,7 @@ int data_collate_structures(int embed_dbox, int verbose)
 
 		while (dbox_chain != NULL) {
 			dbox_chain->file_offset = offset;
-			dbox_chain->block_length = (strlen(dbox_chain->tag) + 7) & (~3);
+			dbox_chain->block_length = (strlen(dbox_chain->tag) + 8) & (~3);
 
 			offset += dbox_chain->block_length;
 
