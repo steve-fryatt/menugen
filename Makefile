@@ -28,6 +28,7 @@ else
   CC := gcc
 endif
 
+MKDIR := mkdir
 RM := rm -rf
 CP := cp
 
@@ -93,9 +94,13 @@ all: documentation $(OUTDIR)/$(RUNIMAGE)
 
 OBJS := $(addprefix $(OBJDIR)/, $(OBJS))
 
-$(OUTDIR)/$(RUNIMAGE): $(OBJS)
+$(OUTDIR)/$(RUNIMAGE): $(OBJS) $(OBJDIR)
 	$(CC) $(CCFLAGS) $(LINKS) -o $(OUTDIR)/$(RUNIMAGE) $(OBJS)
 
+# Create a folder to hold the object files.
+
+$(OBJDIR):
+	$(MKDIR) $(OBJDIR)
 
 # Build the object files, and identify their dependencies.
 
