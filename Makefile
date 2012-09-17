@@ -29,16 +29,31 @@
 .PHONY: all clean documentation release install
 
 
+# The build date.
+
+BUILD_DATE := $(shell date "+%d %b %Y")
+HELP_DATE := $(shell date "+%-d %B %Y")
+
+# Construct version or revision information.
+
+ifeq ($(VERSION),)
+  RELEASE := $(shell svnversion --no-newline)
+  VERSION := r$(RELEASE)
+  RELEASE := $(subst :,-,$(RELEASE))
+  HELP_VERSION := ----
+else
+  RELEASE := $(subst .,,$(VERSION))
+  HELP_VERSION := $(VERSION)
+endif
+
+$(info Building with version $(VERSION) ($(RELEASE)) on date $(BUILD_DATE))
+
 # The archive to assemble the release files in.  If $(RELEASE) is set, then the file can be given
 # a standard version number suffix.
 
 ZIPFILE := menugen$(RELEASE).zip
+SRCZIPFILE := menugen$(RELEASE)src.zip
 BUZIPFILE := menugen$(shell date "+%Y%m%d").zip
-
-
-# The build date.
-
-BUILD_DATE := $(shell date "+%d %b %Y")
 
 
 # Build Tools
@@ -142,15 +157,20 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 documentation: $(OUTDIR)/$(README)
 
 $(OUTDIR)/$(README): $(MANUAL)/$(MANSRC)
-	$(TEXTMAN) $(MANUAL)/$(MANSRC) $(OUTDIR)/$(README)
+	$(TEXTMAN) -I$(MANUAL)/$(MANSRC) -O$(OUTDIR)/$(README) -D'version=$(HELP_VERSION)' -D'date=$(HELP_DATE)'
 
 
 # Build the release Zip file.
 
 release: clean all
-	$(RM) $(ZIPFILE)
-	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../$(ZIPFILE) $(RUNIMAGE))
-	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../$(ZIPFILE) $(README))
+	$(RM) ../$(ZIPFILE)
+	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../../$(ZIPFILE) $(RUNIMAGE))
+	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../../$(ZIPFILE) $(README))
+	$(RM) ../$(SRCZIPFILE)
+	$(ZIP) $(ZIPFLAGS) ../$(SRCZIPFILE) $(OUTDIR)
+	$(ZIP) $(ZIPFLAGS) ../$(SRCZIPFILE) $(SRCDIR)
+	$(ZIP) $(ZIPFLAGS) ../$(SRCZIPFILE) $(MANUAL)
+	$(ZIP) $(ZIPFLAGS) ../$(SRCZIPFILE) Makefile
 
 
 # Build a backup Zip file
