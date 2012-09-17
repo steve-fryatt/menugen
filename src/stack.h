@@ -23,8 +23,8 @@
  * permissions and limitations under the Licence.
  */
 
-#ifndef _MENUGEN_STACK_H
-#define _MENUGEN_STACK_H
+#ifndef MENUGEN_STACK_H
+#define MENUGEN_STACK_H
 
 #define STACK_EMPTY -1
 

@@ -23,8 +23,8 @@
  * permissions and limitations under the Licence.
  */
 
-#ifndef _MENUGEN_PARSE_H
-#define _MENUGEN_PARSE_H
+#ifndef MENUGEN_PARSE_H
+#define MENUGEN_PARSE_H
 
 int parse_process_file(char *filename, int verbose);
 

@@ -24,8 +24,8 @@
  */
 
 
-#ifndef _MENUGEN_DATA_H
-#define _MENUGEN_DATA_H
+#ifndef MENUGEN_DATA_H
+#define MENUGEN_DATA_H
 
 #define MAX_TAG_LEN 32
 #define MAX_TEMPLATE_NAME 16
