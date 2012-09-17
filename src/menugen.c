@@ -10,7 +10,7 @@
  *
  * You may obtain a copy of the Licence at:
  *
- *   http://joinup.ec.europa.eu/software/page/euplsss
+ *   http://joinup.ec.europa.eu/software/page/eupl
  *
  * Unless required by applicable law or agreed to in
  * writing, software distributed under the Licence is
