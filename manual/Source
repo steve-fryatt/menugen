@@ -15,15 +15,15 @@ MenuGen - Create Menus for RISC OS Applications                  Version $$versi
 
 
 
-<chapter title="License" file="License">
+<chapter title="Licence" file="Licence">
 
-<cite>MenuGen</cite> is <strong>freeware</strong>.  Copyright is held by the author, Stephen Fryatt, 2010.
+<cite>MenuGen</cite> is licensed under the EUPL, Version 1.1 only (the "Licence"); you may not use this work except in compliance with the Licence.
 
-<cite>MenuGen</cite> may be copied freely, so long as it remains unaltered with all its files and documentation intact.
+You may obtain a copy of the Licence at http://joinup.ec.europa.eu/software/page/eupl
 
-If you wish to distribute <cite>MenuGen</cite>, please contact me to get my permission.  This is so that I can ensure that you have the latest version available.  <cite>PrintPDF</cite> may not be sold, although Public Domain libraries may charge for the cost of discs.
+Unless required by applicable law or agreed to in writing, software distributed under the Licence is distributed on an &quot;<strong>as is</strong>&quot; basis, <strong>without warranties or conditions of any kind</strong>, either express or implied.
 
-No guarantee is made as to the suitability or stability of <cite>MenuGen</cite> or its assocuated libraries for any particular purpose.  No liability can be accepted by the author for any loss or damage caused by the use of <cite>MenuGen</cite>.
+See the Licence for the specific language governing permissions and limitations under the Licence.
 
 </chapter>
 

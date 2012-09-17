@@ -1,17 +1,37 @@
+/* Copyright 1996-2012, Stephen Fryatt
+ *
+ * This file is part of MenuGen:
+ *
+ *   http://www.stevefryatt.org.uk/software/
+ *
+ * Licensed under the EUPL, Version 1.1 only (the "Licence");
+ * You may not use this work except in compliance with the
+ * Licence.
+ *
+ * You may obtain a copy of the Licence at:
+ *
+ *   http://joinup.ec.europa.eu/software/page/euplsss
+ *
+ * Unless required by applicable law or agreed to in
+ * writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis,
+ *
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied.
+ *
+ * See the Licence for the specific language governing
+ * permissions and limitations under the Licence.
+ */
+
 /* MenuGen
  *
- * Generate menu definition blocks for RISC OS.
- *
- * (c) Stephen Fryatt, 1996-2010
- * Version 1.00 (7 May 2010)
+ * Generate menu definition blocks for RISC OS in a cross-compilation
+ * environment.
  *
  * Syntax: MenuGen [<options>]
  *
- * Options -In <file>    - definition file
- *         -Out <file>   - menu file to generate
- *         -Verbose      - display details of parsing
- *         -Messagetrans - create file for MessageTrans_MakeMenus
- *         -Embed        - embed template names for dialogue boxes.
+ * Options -d  - Embed dialogue box names into the output
+ *         -v  - Produce verbose output
  */
 
 #include <stdlib.h>
