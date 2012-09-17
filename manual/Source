@@ -1,6 +1,6 @@
 <document title="MenuGen">
-<define name="version" value="2.00">
-<define name="date" value="5 June 2010" length=30 align="right">
+<define name="version" value="">
+<define name="date" value="" length=30 align="right">
 
 
 
@@ -9,7 +9,7 @@
 =============================================================================
 MenuGen - Create Menus for RISC OS Applications                  Version $$version$$
 
-(c) Stephen Fryatt, 2010                       $$date$$
+(c) Stephen Fryatt, 2001-2012                  $$date$$
 =============================================================================
 </literal>
 
@@ -421,7 +421,7 @@ The end of the validation data is indicated by a block containing an offset of -
 
 <chapter title="Version History" file="History">
 
-Here is a list of the versions of <cite>PrintPDF</cite>, along with all the changes made.
+Here is a list of the versions of <cite>MenuGen</cite>, along with all the changes made.
 
 
 <subhead title="1.00 (17 February 2001)">
@@ -429,7 +429,7 @@ Here is a list of the versions of <cite>PrintPDF</cite>, along with all the chan
 Original BBC BASIC code.
 
 
-<subhead title="2.00 (5 June 2010)">
+<subhead title="2.00 (17 September 2012)">
 
 Rewritten in C for use with GCCSDK.
 
