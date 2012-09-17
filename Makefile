@@ -85,10 +85,11 @@ MENUGEN := $(SFBIN)/menugen
 
 ifeq ($(TARGET),riscos)
   CCFLAGS := -mlibscl -mhard-float -static -mthrowback -Wall -O2 -D'BUILD_VERSION="$(VERSION)"' -D'BUILD_DATE="$(BUILD_DATE)"' -fno-strict-aliasing -mpoke-function-name
+  ZIPFLAGS := -x "*/.svn/*" -r -, -9
 else
   CCFLAGS := -Wall -O2 -fno-strict-aliasing -D'BUILD_VERSION="$(VERSION)"' -D'BUILD_DATE="$(BUILD_DATE)"'
+  ZIPFLAGS := -x "*/.svn/*" -r -9
 endif
-ZIPFLAGS := -x "*/.svn/*" -r -, -9
 BUZIPFLAGS := -x "*/.svn/*" -r -9
 BINDHELPFLAGS := -f -r -v
 MENUGENFLAGS := -d
@@ -110,7 +111,11 @@ OUTDIR := build
 
 # Set up the named target files.
 
-RUNIMAGE := menugen
+ifeq ($(TARGET),riscos)
+  RUNIMAGE := menugen,ffa
+else
+  RUNIMAGE := menugen
+endif
 README := ReadMe
 
 
