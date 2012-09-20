@@ -51,7 +51,11 @@ $(info Building with version $(VERSION) ($(RELEASE)) on date $(BUILD_DATE))
 # The archive to assemble the release files in.  If $(RELEASE) is set, then the file can be given
 # a standard version number suffix.
 
-ZIPFILE := menugen$(RELEASE).zip
+ifeq ($(TARGET),riscos)
+  ZIPFILE := menugen$(RELEASE)ro.zip
+else
+  ZIPFILE := menugen$(RELEASE)linux.zip
+endif
 SRCZIPFILE := menugen$(RELEASE)src.zip
 BUZIPFILE := menugen$(shell date "+%Y%m%d").zip
 
@@ -106,17 +110,25 @@ LINKS := -L$(GCCSDK_INSTALL_ENV)/lib
 SRCDIR := src
 MANUAL := manual
 OBJDIR := obj
-OUTDIR := build
+ifeq ($(TARGET),riscos)
+  OUTDIR := buildro
+else
+  OUTDIR := buildlinux
+endif
+
 
 
 # Set up the named target files.
 
 ifeq ($(TARGET),riscos)
-  RUNIMAGE := menugen,ffa
+  RUNIMAGE := menugen,ff8
+  README := ReadMe,fff
+  LICENSE := Licence,fff
 else
   RUNIMAGE := menugen
+  README := ReadMe.txt
+  LICENSE := Licence.txt
 endif
-README := ReadMe
 
 
 # Set up the source files.
@@ -169,13 +181,9 @@ $(OUTDIR)/$(README): $(MANUAL)/$(MANSRC)
 
 release: clean all
 	$(RM) ../$(ZIPFILE)
-	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../../$(ZIPFILE) $(RUNIMAGE))
-	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../../$(ZIPFILE) $(README))
+	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../../$(ZIPFILE) $(RUNIMAGE) $(README) $(LICENSE))
 	$(RM) ../$(SRCZIPFILE)
-	$(ZIP) $(ZIPFLAGS) ../$(SRCZIPFILE) $(OUTDIR)
-	$(ZIP) $(ZIPFLAGS) ../$(SRCZIPFILE) $(SRCDIR)
-	$(ZIP) $(ZIPFLAGS) ../$(SRCZIPFILE) $(MANUAL)
-	$(ZIP) $(ZIPFLAGS) ../$(SRCZIPFILE) Makefile
+	$(ZIP) $(ZIPFLAGS) ../$(SRCZIPFILE) $(OUTDIR) $(SRCDIR) $(MANUAL) Makefile
 
 
 # Build a backup Zip file
