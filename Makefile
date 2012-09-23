@@ -108,10 +108,12 @@ LINKS := -L$(GCCSDK_INSTALL_ENV)/lib
 SRCDIR := src
 MANUAL := manual
 OBJDIR := obj
+OUTDIRLINUX := buildlinux
+OUTDIRRO:= buildro
 ifeq ($(TARGET),riscos)
-  OUTDIR := buildro
+  OUTDIR := $(OUTDIRRO)
 else
-  OUTDIR := buildlinux
+  OUTDIR := $(OUTDIRLINUX)
 endif
 
 
@@ -181,7 +183,7 @@ release: clean all
 	$(RM) ../$(ZIPFILE)
 	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../../$(ZIPFILE) $(RUNIMAGE) $(README) $(LICENSE))
 	$(RM) ../$(SRCZIPFILE)
-	$(ZIP) $(ZIPFLAGS) ../$(SRCZIPFILE) $(OUTDIR) $(SRCDIR) $(MANUAL) Makefile
+	$(ZIP) $(ZIPFLAGS) ../$(SRCZIPFILE) $(OUTDIRLINUX) $(OUTDIRRO) $(SRCDIR) $(MANUAL) Makefile
 
 
 # Build a backup Zip file
