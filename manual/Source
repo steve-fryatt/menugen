@@ -17,7 +17,7 @@ MenuGen - Create Menus for RISC OS Applications                  Version $$versi
 
 <chapter title="Licence" file="Licence">
 
-<cite>MenuGen</cite> is licensed under the EUPL, Version 1.1 only (the "Licence"); you may not use this work except in compliance with the Licence.
+<cite>MenuGen</cite> is licensed under the EUPL, Version&nbsp;1.1 only (the "Licence"); you may not use this work except in compliance with the Licence.
 
 You may obtain a copy of the Licence at http://joinup.ec.europa.eu/software/page/eupl
 
@@ -34,7 +34,7 @@ The source for <cite>MenuGen</cite> can be found alongside this binary download,
 
 <chapter title="Introduction" file="Introduction">
 
-<cite>MenuGen</cite> provides a means of building RISC OS menus into a form of &quot;Template File&quot; which can be loaded into an application's workspace and passed directly to <code>Wimp_CreateMenu</code>. Items such as indirected data buffers are handled automatically.
+<cite>MenuGen</cite> provides a means of building RISC&nbsp;OS menus into a form of &quot;Template File&quot; which can be loaded into an application's workspace and passed directly to <code>Wimp_CreateMenu</code>. Items such as indirected data buffers are handled automatically.
 
 </chapter>
 
