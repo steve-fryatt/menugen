@@ -119,7 +119,7 @@ A file consists of one or more top-level commands which define the menu structur
 The <command>menu</command> command defines a new, empty menu.  It takes two parameters:
 
 <list>
-<li><command>tag</command> is a alphanumeric tag, which will be used to identify the menu within <cite>MenuGen</cite>. It can not contian spaces.
+<li><command>tag</command> is a alphanumeric tag, which will be used to identify the menu within <cite>MenuGen</cite>. It can not contain spaces.
 <li><command>title</command> is the menu title. If longer than 12 characters, it will automatically become indirected.
 </list>
 
@@ -130,7 +130,7 @@ The <command>menu</command> command can be followed by a block, containing the m
 
 The <command>menu</command> command can be followed by a block, containing one or more of the following commands to define the menu.  If it is not, or if any commands are omitted, defaults are used which conform to the <cite>Style Guide</cite>; a menu really needs at least one <command>item</command>, otherwise it will be of little use.
 
-Muliple <command>item</command> commands can be used to add menu items in sequence; if more than one of any other command is encountered, the last one will take effect.
+Multiple <command>item</command> commands can be used to add menu items in sequence; if more than one of any other command is encountered, the last one will take effect.
 
 <comdef target="colours" params="(title_fg, title_bg, work_fg, work_bg)">
 
@@ -223,7 +223,7 @@ If omitted, the default values of (7, 0) are used.
 
 The <command>d_box</command> command specifies that the menu item leads to a dialogue box. When the Menus file is loaded into an application, it will be necessary to specify window handles for each box: either by tag, or in an order specified by <cite>MenuGen</cite> on file compilation (depending on the compilation options specified).
 
-If required, the command can be followed by a group to specifiy further options for the dialogue.
+If required, the command can be followed by a group to specify further options for the dialogue.
 
 <list>
 <li><command>tag</command> gives an alphanumeric tag to identify the dialogue box by. It can not contain spaces.
@@ -264,7 +264,7 @@ The <command>sprite</command> command is not implemented, and all menu items mus
 
 The <command>submenu</command> command indicates that the menu item leads to a submenu, defined elsewhere in the file by another <command>menu</command> command and identified by its tag.
 
-If required, the command can be followed by a group to specifiy further options for the submenu.
+If required, the command can be followed by a group to specify further options for the submenu.
 
 <list>
 <li><command>tag</command> gives the tag of the menu to be linked as a submenu.
@@ -278,9 +278,9 @@ The <command>ticked</command> command indicates that the menu item should be tic
 
 <comdef target="writable">
 
-The <command>writable</command> command indicates that the menu item should be writable. If not specified as indirected with the <command>indirected</command> command, then item will be made indirected and given a length of 12 characters plus terminator.
+The <command>writable</command> command indicates that the menu item should be writeable. If not specified as indirected with the <command>indirected</command> command, then item will be made indirected and given a length of 12 characters plus terminator.
 
-If required, the command can be followed by a group to specifiy a validation string.
+If required, the command can be followed by a group to specify a validation string.
 </comdef>
 
 
@@ -317,13 +317,13 @@ The <command>writable</command> command can optionally be followed by a group co
 
 <comdef target="validation" params="(&quot;string&quot;)">
 
-The <command>validation</command> command sets a validation string for the writable menu entry.
+The <command>validation</command> command sets a validation string for the writeable menu entry.
 
 <list>
 <li><command>string</command> sets the validation string.
 </list>
 
-If omitted, the writable entry will have no validation string applied.
+If omitted, the writeable entry will have no validation string applied.
 </comdef>
 
 </chapter>
@@ -363,7 +363,7 @@ Starting at byte 12 are a sequence of menu data blocks.  Each consists of the fo
 
 The next menu block offset points to the start of the Wimp_CreateMenu block for that menu: that is, it points to the 8th byte of the data block.
 
-The submenu list links in any menu items which use this menu block as a submenu.  The offfset points to the first submenu pointer (bytes 4-7 of the menu item block); each submenu pointer then contains an offset to the next pointer or -1 if they are the last in the list (which must be read before being replaced by the real pointer).
+The submenu list links in any menu items which use this menu block as a submenu.  The offset points to the first submenu pointer (bytes 4-7 of the menu item block); each submenu pointer then contains an offset to the next pointer or -1 if they are the last in the list (which must be read before being replaced by the real pointer).
 
 
 <subhead title="Dialogue list">
