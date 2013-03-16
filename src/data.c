@@ -1,4 +1,4 @@
-/* Copyright 1996-2012, Stephen Fryatt
+/* Copyright 1996-2012, Stephen Fryatt (info@stevefryatt.org.uk)
  *
  * This file is part of MenuGen:
  *
