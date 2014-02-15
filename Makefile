@@ -197,7 +197,7 @@ backup:
 # Install the finished version in the GCCSDK, ready for use.
 
 install: clean all
-	$(CP) -r $(OUTDIR)/$(RUMIMAGE) $(SFBIN)
+	$(CP) -r $(OUTDIR)/$(RUNIMAGE) $(SFBIN)
 
 
 # Clean targets
