@@ -70,17 +70,12 @@ MKDIR := mkdir
 RM := rm -rf
 CP := cp
 
-ZIP := /home/steve/GCCSDK/env/bin/zip
+ZIP := $(GCCSDK_INSTALL_ENV)/bin/zip
 
-SFBIN := /home/steve/GCCSDK/sfbin
-
-TEXTMAN := $(SFBIN)/textman
-STRONGMAN := $(SFBIN)/strongman
-HTMLMAN := $(SFBIN)/htmlman
-DDFMAN := $(SFBIN)/ddfman
-BINDHELP := $(SFBIN)/bindhelp
-TEXTMERGE := $(SFBIN)/textmerge
-MENUGEN := $(SFBIN)/menugen
+MANTOOLS := $(SFTOOLS_BIN)/mantools
+BINDHELP := $(SFTOOLS_BIN)/bindhelp
+TEXTMERGE := $(SFTOOLS_BIN)/textmerge
+MENUGEN := $(SFTOOLS_BIN)/menugen
 
 
 # Build Flags
@@ -175,7 +170,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 documentation: $(OUTDIR)/$(README)
 
 $(OUTDIR)/$(README): $(MANUAL)/$(MANSRC)
-	$(TEXTMAN) -I$(MANUAL)/$(MANSRC) -O$(OUTDIR)/$(README) -D'version=$(HELP_VERSION)' -D'date=$(HELP_DATE)'
+	$(MANTOOLS) -MTEXT -I$(MANUAL)/$(MANSRC) -O$(OUTDIR)/$(README) -D'version=$(HELP_VERSION)' -D'date=$(HELP_DATE)'
 
 
 # Build the release Zip file.
@@ -197,7 +192,7 @@ backup:
 # Install the finished version in the GCCSDK, ready for use.
 
 install: clean all
-	$(CP) -r $(OUTDIR)/$(RUNIMAGE) $(SFBIN)
+	$(CP) -r $(OUTDIR)/$(RUNIMAGE) $(SFTOOLS_BIN)
 
 
 # Clean targets
