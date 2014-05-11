@@ -528,7 +528,7 @@ int data_collate_structures(int embed_dbox, int verbose)
 			validation->block_length = ((validation->string_len) + 11) & (~3);
 			validation->target = (validation->item)->file_offset + 16;
 
-			offset += indirection->block_length;
+			offset += validation->block_length;
 		}
 
 		if (validation->block_length > longest_validation)
