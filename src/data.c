@@ -1,4 +1,4 @@
-/* Copyright 1996-2012, Stephen Fryatt (info@stevefryatt.org.uk)
+/* Copyright 1996-2015, Stephen Fryatt (info@stevefryatt.org.uk)
  *
  * This file is part of MenuGen:
  *
@@ -21,6 +21,7 @@
  * permissions and limitations under the Licence.
  */
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -53,7 +54,7 @@ struct item_definition {
 	int			icon_background;
 
 	char			submenu_tag[MAX_TAG_LEN];
-	int			submenu_dbox; /* 1 if the item is a dbox. */
+	bool			submenu_dbox; /* True if the item is a dbox. */
 
 	struct menu_definition	*submenu;
 	struct dbox_chain_data	*dbox;
@@ -70,7 +71,7 @@ struct menu_definition {
 	char			*title;
 	int			title_len; /* 0 for non-indirected. */
 
-	int			reversed;
+	bool			reversed;
 
 	int			item_width;
 	int			item_height;
@@ -221,17 +222,18 @@ static int			longest_dbox_chain = 0;
 
 struct menu_definition		*data_find_menu_from_tag(char *tag);
 struct dbox_chain_data		*data_find_dbox_chain_from_tag(char *tag);
-char				*data_boolean_yes_no(int value);
+static char			*data_boolean_yes_no(int value);
 
 /**
  * Go through the assembled menu structures, filling in the missing data and
  * getting the contents ready to write out the menu block.
  *
- * Param:  verbose	1 if verbose output is required; else 0.
- * Return:		0 if collation completed successfully; else 0.
+ * \param embed_dbox	True if dialogue box names should be embeded; else False.
+ * \param verbose	True if verbose output is required; else False.
+ * \return		True if collation completed successfully; else False.
  */
 
-int data_collate_structures(int embed_dbox, int verbose)
+bool data_collate_structures(bool embed_dbox, bool verbose)
 {
 	struct menu_definition	*menu;
 	struct item_definition	*item;
@@ -243,7 +245,7 @@ int data_collate_structures(int embed_dbox, int verbose)
 	int			width, offset, item_offset, chain;
 
 	if (menu_list == NULL)
-		return 1;
+		return false;
 
 	/**
 	 * Start by filling in the menu and items blocks, and collecting
@@ -280,7 +282,7 @@ int data_collate_structures(int embed_dbox, int verbose)
 					item->icon_flags = wimp_ICON_FILLED;
 
 					*(item->submenu_tag) = '\0';
-					item->submenu_dbox = 0;
+					item->submenu_dbox = false;
 
 					item->submenu = NULL;
 					item->dbox = NULL;
@@ -566,7 +568,7 @@ int data_collate_structures(int embed_dbox, int verbose)
 			offset += 4;
 	}
 
-	return 0;
+	return true;
 }
 
 /**
@@ -810,11 +812,11 @@ void data_print_structure_report(void)
 /**
  * Write a menu definition file.
  *
- * Param:  *filename	The file to write.
- * Return:		0 if the file was created OK; else 1;
+ * \param *filename	The file to write.
+ * \return		True if the file was created OK; else False;
  */
 
-int data_write_standard_menu_file(char *filename)
+bool data_write_standard_menu_file(char *filename)
 {
 	FILE				*file;
 
@@ -848,13 +850,13 @@ int data_write_standard_menu_file(char *filename)
 		if (dbox_tag_block != NULL)
 			free(dbox_tag_block);
 
-		return 1;
+		return false;
 	}
 
 	file = fopen(filename, "w");
 
 	if (file == NULL)
-		return 1;
+		return false;
 
 	/* Write the file header. */
 
@@ -1049,7 +1051,7 @@ int data_write_standard_menu_file(char *filename)
 		menu = menu->next;
 	}
 
-	return 0;
+	return true;
 }
 
 
@@ -1057,12 +1059,12 @@ int data_write_standard_menu_file(char *filename)
  * Create a new menu, giving it the supplied tag and title and making it the
  * current menu.
  *
- * Param:  *tag		The internal tag used to identify the menu.
- * Param:  *title	The menu title.
- * Return:		0 if the menu created OK; else 1.
+ * \param *tag		The internal tag used to identify the menu.
+ * \param *title	The menu title.
+ * \return		True if the menu created OK; else False.
  */
 
-int data_create_new_menu(char *tag, char *title)
+bool data_create_new_menu(char *tag, char *title)
 {
 	struct menu_definition	*menu;
 
@@ -1071,13 +1073,13 @@ int data_create_new_menu(char *tag, char *title)
 	menu = (struct menu_definition *) malloc(sizeof(struct menu_definition));
 
 	if (menu == NULL)
-		return 1;
+		return false;
 
 	menu->title = (char *) malloc(strlen(title)+1);
 
 	if (menu->title == NULL) {
 		free(menu);
-		return 1;
+		return false;
 	}
 
 	strcpy(menu->tag, tag);
@@ -1092,7 +1094,7 @@ int data_create_new_menu(char *tag, char *title)
 	menu->first_item = NULL;
 	menu->file_offset = NULL_OFFSET;
 
-	menu->reversed = 0;
+	menu->reversed = false;
 
 	menu->item_width = 0;
 	menu->item_height = 44;
@@ -1115,36 +1117,36 @@ int data_create_new_menu(char *tag, char *title)
 	current_menu = menu;
 	current_item = NULL;
 
-	return 0;
+	return true;
 }
 
 /**
  * Create a new menu item in the current menu, giving it the supplied title
  * and making it the current menu item.
  *
- * Param:  *title	The menu item title.
- * Return:		0 if the item was created OK; else false.
+ * \param *title	The menu item title.
+ * \return		True if the item was created OK; else False.
  */
 
-int data_create_new_item(char *text)
+bool data_create_new_item(char *text)
 {
 	struct item_definition	*item;
 
 	/* If there isn't a current menu, then we can't create a new item. */
 
 	if (current_menu == NULL)
-		return 1;
+		return false;
 
 	item = (struct item_definition *) malloc(sizeof(struct item_definition));
 
 	if (item == NULL)
-		return 1;
+		return false;
 
 	item->text = (char *) malloc(strlen(text)+1);
 
 	if (item->text == NULL) {
 		free(item);
-		return 1;
+		return false;
 	}
 
 	strcpy(item->text, text);
@@ -1161,7 +1163,7 @@ int data_create_new_item(char *text)
 	item->icon_flags = wimp_ICON_FILLED;
 
 	*(item->submenu_tag) = '\0';
-	item->submenu_dbox = 0;
+	item->submenu_dbox = false;
 
 	item->submenu = NULL;
 	item->dbox = NULL;
@@ -1180,282 +1182,282 @@ int data_create_new_item(char *text)
 	current_item = item;
 	(current_menu->items)++;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current item's submenu status.
  *
- * Param:  *tag		The tag for the submenu.
- * Param:  dbox		1 if the item is a dbox; else 0.
- * Return:		0 if the tag was set correctly.
+ * \param *tag		The tag for the submenu.
+ * \param dbox		True if the item is a dbox; else False.
+ * \return		True if the tag was set correctly; else False.
  */
 
-int data_set_item_submenu(char *tag, int dbox)
+bool data_set_item_submenu(char *tag, bool dbox)
 {
 	if (current_item == NULL)
-		return 1;
+		return false;
 
 	if (strlen(tag)+1 > MAX_TAG_LEN)
-		return 1;
+		return false;
 
 	strcpy(current_item->submenu_tag, tag);
 	current_item->submenu_dbox = dbox;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current menu's title indirection status.
  *
- * Param:  size		The indirected buffer size.
- * Return:		0 if the indirection was set correctly.
+ * \param size		The indirected buffer size.
+ * \return		True if the indirection was set correctly; else False.
  */
 
-int data_set_menu_title_indirection(int size)
+bool data_set_menu_title_indirection(int size)
 {
 	if (current_menu == NULL)
-		return 1;
+		return false;
 
 	if (size >= current_menu->title_len)
 		current_menu->title_len = size + 1;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current item's indirection status.
  *
- * Param:  size		The indirected buffer size.
- * Return:		0 if the indirection was set correctly.
+ * \param size		The indirected buffer size.
+ * \return		True if the indirection was set correctly; else False.
  */
 
-int data_set_item_indirection(int size)
+bool data_set_item_indirection(int size)
 {
 	if (current_item == NULL)
-		return 1;
+		return false;
 
 	if (size >= current_item->text_len)
 		current_item->text_len = size + 1;
 
-	return 0;
+	return true;
 }
 
 /**
  * Make the current item writable.
  *
- * Return:		0 if the writable status was set correctly.
+ * \return		True if the writable status was set correctly; else False.
  */
 
-int data_set_item_writable(void)
+bool data_set_item_writable(void)
 {
 	if (current_item == NULL)
-		return 1;
+		return false;
 
 	data_set_item_indirection(12);
 	current_item->menu_flags |= wimp_MENU_WRITABLE;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current item's validation string.
  *
- * Param:  *validation	The validation string.
- * Return:		0 of the validation string was set correctly.
+ * \param *validation	The validation string.
+ * \return		True if the validation string was set correctly; else False.
  */
 
-int data_set_item_validation(char *validation)
+bool data_set_item_validation(char *validation)
 {
 	if ((current_item == NULL) ||
 			((current_item->menu_flags & wimp_MENU_WRITABLE) == 0) ||
 			(current_item->validation != NULL))
-		return 1;
+		return false;
 
-	current_item->validation = (char *) malloc(strlen(validation)+1);
+	current_item->validation = (char *) malloc(strlen(validation) + 1);
 
 	if (current_item->validation == NULL) {
-		return 1;
+		return false;
 	}
 
 	strcpy(current_item->validation, validation);
 
-	return 0;
+	return true;
 
 }
 
 /**
  * Set the current menu's colours.
  *
- * Param:  title_fg
- * Param:  title_bg
- * Param:  work_fg
- * Param:  work_bg
- * Return:		0 if the colours were set correctly.
+ * \param title_fg
+ * \param title_bg
+ * \param work_fg
+ * \param work_bg
+ * \return		True if the colours were set correctly; else False.
  */
 
-int data_set_menu_colours(int title_fg, int title_bg, int work_fg, int work_bg)
+bool data_set_menu_colours(int title_fg, int title_bg, int work_fg, int work_bg)
 {
 	if (current_menu == NULL)
-		return 1;
+		return false;
 
 	current_menu->title_foreground = title_fg;
 	current_menu->title_background = title_bg;
 	current_menu->work_area_foreground = work_fg;
 	current_menu->work_area_background = work_bg;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current item's colours.
  *
- * Param:  title_fg
- * Param:  title_bg
- * Param:  work_fg
- * Param:  work_bg
- * Return:		0 if the colours were set correctly.
+ * \param title_fg
+ * \param title_bg
+ * \param work_fg
+ * \param work_bg
+ * \return		True if the colours were set correctly; else False.
  */
 
-int data_set_item_colours(int icon_fg, int icon_bg)
+bool data_set_item_colours(int icon_fg, int icon_bg)
 {
 	if (current_item == NULL)
-		return 1;
+		return false;
 
 	current_item->icon_foreground = icon_fg;
 	current_item->icon_background = icon_bg;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current item to be reversed.
  *
- * Return:		0 if the state was set correctly.
+ * \return		True if the state was set correctly; else False.
  */
 
-int data_set_menu_reversed(void)
+bool data_set_menu_reversed(void)
 {
 	if (current_menu == NULL)
-		return 1;
+		return false;
 
-	current_menu->reversed = 1;
+	current_menu->reversed = true;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current menu's item height.
  *
- * Param:  height	The new height.
- * Return:		0 if the height was set correctly.
+ * \param height	The new height.
+ * \return		True if the height was set correctly; else False.
  */
 
-int data_set_menu_item_height(int height)
+bool data_set_menu_item_height(int height)
 {
 	if (current_menu == NULL)
-		return 1;
+		return false;
 
 	current_menu->item_height = height;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current menu's item gap.
  *
- * Param:  gap		The new gap.
- * Return:		0 if the gap was set correctly.
+ * \param gap		The new gap.
+ * \return		True if the gap was set correctly; else False.
  */
 
-int data_set_menu_item_gap(int gap)
+bool data_set_menu_item_gap(int gap)
 {
 	if (current_menu == NULL)
-		return 1;
+		return false;
 
 	current_menu->item_gap = gap;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current item to be ticked.
  *
- * Return:		0 if the status was set correctly.
+ * \return		True if the status was set correctly; else False.
  */
 
-int data_set_item_ticked(void)
+bool data_set_item_ticked(void)
 {
 	if (current_item == NULL)
-		return 1;
+		return false;
 
 	current_item->menu_flags |= wimp_MENU_TICKED;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current item to be dotted.
  *
- * Return:		0 if the status was set correctly.
+ * \return		True if the status was set correctly; else False.
  */
 
-int data_set_item_dotted(void)
+bool data_set_item_dotted(void)
 {
 	if (current_item == NULL)
-		return 1;
+		return false;
 
 	current_item->menu_flags |= wimp_MENU_SEPARATE;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current item to give a submenu warning.
  *
- * Return:		0 if the status was set correctly.
+ * \return		True if the status was set correctly; else False.
  */
 
-int data_set_item_warning(void)
+bool data_set_item_warning(void)
 {
 	if (current_item == NULL)
-		return 1;
+		return false;
 
 	current_item->menu_flags |= wimp_MENU_GIVE_WARNING;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current item to be available when shaded.
  *
- * Return:		0 if the status was set correctly.
+ * \return		True if the status was set correctly; else False.
  */
 
-int data_set_item_when_shaded(void)
+bool data_set_item_when_shaded(void)
 {
 	if (current_item == NULL)
-		return 1;
+		return false;
 
 	current_item->menu_flags |= wimp_MENU_SUB_MENU_WHEN_SHADED;
 
-	return 0;
+	return true;
 }
 
 /**
  * Set the current item to be shaded.
  *
- * Return:		0 if the status was set correctly.
+ * \return		True if the status was set correctly; else False.
  */
 
-int data_set_item_shaded(void)
+bool data_set_item_shaded(void)
 {
 	if (current_item == NULL)
-		return 1;
+		return false;
 
 	current_item->icon_flags |= wimp_ICON_SHADED;
 
-	return 0;
+	return true;
 }
 
 
@@ -1467,7 +1469,7 @@ int data_set_item_shaded(void)
  * Return:		"Yes" or "No".
  */
 
-char *data_boolean_yes_no(int value)
+static char *data_boolean_yes_no(int value)
 {
 	return (value) ? "Yes" : "No";
 }

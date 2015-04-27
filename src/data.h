@@ -1,4 +1,4 @@
-/* Copyright 1996-2012, Stephen Fryatt (info@stevefryatt.org.uk)
+/* Copyright 1996-2015, Stephen Fryatt (info@stevefryatt.org.uk)
  *
  * This file is part of MenuGen:
  *
@@ -25,30 +25,32 @@
 #ifndef MENUGEN_DATA_H
 #define MENUGEN_DATA_H
 
+#include <stdbool.h>
+
 #define MAX_TAG_LEN 32
 #define MAX_TEMPLATE_NAME 16
 
-int data_collate_structures(int embed_dbox, int verbose);
+bool data_collate_structures(bool embed_dbox, bool verbose);
 void data_print_structure_report(void);
-int data_write_standard_menu_file(char *filename);
+bool data_write_standard_menu_file(char *filename);
 
-int data_create_new_menu(char *tag, char *title);
-int data_create_new_item(char *text);
-int data_set_item_submenu(char *tag, int dbox);
-int data_set_menu_title_indirection(int size);
-int data_set_item_indirection(int size);
-int data_set_item_writable(void);
-int data_set_item_validation(char *validation);
-int data_set_menu_colours(int title_fg, int title_bg, int work_fg, int work_bg);
-int data_set_item_colours(int icon_fg, int icon_bg);
-int data_set_menu_reversed(void);
-int data_set_menu_item_height(int height);
-int data_set_menu_item_gap(int gap);
-int data_set_item_ticked(void);
-int data_set_item_dotted(void);
-int data_set_item_warning(void);
-int data_set_item_when_shaded(void);
-int data_set_item_shaded(void);
+bool data_create_new_menu(char *tag, char *title);
+bool data_create_new_item(char *text);
+bool data_set_item_submenu(char *tag, bool dbox);
+bool data_set_menu_title_indirection(int size);
+bool data_set_item_indirection(int size);
+bool data_set_item_writable(void);
+bool data_set_item_validation(char *validation);
+bool data_set_menu_colours(int title_fg, int title_bg, int work_fg, int work_bg);
+bool data_set_item_colours(int icon_fg, int icon_bg);
+bool data_set_menu_reversed(void);
+bool data_set_menu_item_height(int height);
+bool data_set_menu_item_gap(int gap);
+bool data_set_item_ticked(void);
+bool data_set_item_dotted(void);
+bool data_set_item_warning(void);
+bool data_set_item_when_shaded(void);
+bool data_set_item_shaded(void);
 
 #endif
 

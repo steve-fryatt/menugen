@@ -1,4 +1,4 @@
-/* Copyright 1996-2012, Stephen Fryatt (info@stevefryatt.org.uk)
+/* Copyright 1996-2015, Stephen Fryatt (info@stevefryatt.org.uk)
  *
  * This file is part of MenuGen:
  *
@@ -37,45 +37,47 @@
 
 #define MAX_COMMAND_LEN 20
 
-#define TYPE_NONE     0
-#define TYPE_MENU     1
-#define TYPE_ITEM     2
-#define TYPE_SUBMENU  3
-#define TYPE_WRITABLE 4
-#define TYPE_SPRITE   5
+enum type {
+	TYPE_NONE = 0,
+	TYPE_MENU = 1,
+	TYPE_ITEM = 2,
+	TYPE_SUBMENU = 3,
+	TYPE_WRITABLE = 4,
+	TYPE_SPRITE = 5
+};
 
 struct command_def {
-	char	command[MAX_COMMAND_LEN];
-	char	params[MAX_PARAM_LIST];
-	int	menu;
-	int	item;
-	int	submenu;
-	int	writable;
-	int	sprite;
-	int	new_type;
-	int	(*handler)(char params[][MAX_PARAM_LEN]);
+	char		command[MAX_COMMAND_LEN];
+	char		params[MAX_PARAM_LIST];
+	bool		menu;
+	bool		item;
+	bool		submenu;
+	bool		writable;
+	bool		sprite;
+	enum type	new_type;
+	bool		(*handler)(char params[][MAX_PARAM_LEN]);
 };
 
 static int parse_find_parameters(char params[][MAX_PARAM_LEN], char *line, char *types);
 
-static int parse_command_always(char params[][MAX_PARAM_LEN]);
-static int parse_command_colours_menu(char params[][MAX_PARAM_LEN]);
-static int parse_command_colours_item(char params[][MAX_PARAM_LEN]);
-static int parse_command_dbox(char params[][MAX_PARAM_LEN]);
-static int parse_command_dotted(char params[][MAX_PARAM_LEN]);
-static int parse_command_indirected_menu(char params[][MAX_PARAM_LEN]);
-static int parse_command_indirected_item(char params[][MAX_PARAM_LEN]);
-static int parse_command_item(char params[][MAX_PARAM_LEN]);
-static int parse_command_item_height(char params[][MAX_PARAM_LEN]);
-static int parse_command_item_gap(char params[][MAX_PARAM_LEN]);
-static int parse_command_menu(char params[][MAX_PARAM_LEN]);
-static int parse_command_reverse(char params[][MAX_PARAM_LEN]);
-static int parse_command_shaded(char params[][MAX_PARAM_LEN]);
-static int parse_command_submenu(char params[][MAX_PARAM_LEN]);
-static int parse_command_ticked(char params[][MAX_PARAM_LEN]);
-static int parse_command_validation(char params[][MAX_PARAM_LEN]);
-static int parse_command_warning(char params[][MAX_PARAM_LEN]);
-static int parse_command_writable(char params[][MAX_PARAM_LEN]);
+static bool parse_command_always(char params[][MAX_PARAM_LEN]);
+static bool parse_command_colours_menu(char params[][MAX_PARAM_LEN]);
+static bool parse_command_colours_item(char params[][MAX_PARAM_LEN]);
+static bool parse_command_dbox(char params[][MAX_PARAM_LEN]);
+static bool parse_command_dotted(char params[][MAX_PARAM_LEN]);
+static bool parse_command_indirected_menu(char params[][MAX_PARAM_LEN]);
+static bool parse_command_indirected_item(char params[][MAX_PARAM_LEN]);
+static bool parse_command_item(char params[][MAX_PARAM_LEN]);
+static bool parse_command_item_height(char params[][MAX_PARAM_LEN]);
+static bool parse_command_item_gap(char params[][MAX_PARAM_LEN]);
+static bool parse_command_menu(char params[][MAX_PARAM_LEN]);
+static bool parse_command_reverse(char params[][MAX_PARAM_LEN]);
+static bool parse_command_shaded(char params[][MAX_PARAM_LEN]);
+static bool parse_command_submenu(char params[][MAX_PARAM_LEN]);
+static bool parse_command_ticked(char params[][MAX_PARAM_LEN]);
+static bool parse_command_validation(char params[][MAX_PARAM_LEN]);
+static bool parse_command_warning(char params[][MAX_PARAM_LEN]);
+static bool parse_command_writable(char params[][MAX_PARAM_LEN]);
 
 
 /* Define the commands here, in terms of name, parameters, what commands they
@@ -86,26 +88,26 @@ static int parse_command_writable(char params[][MAX_PARAM_LEN]);
 #define COMMANDS 20
 
 static const struct command_def command_list[] = {
-	{"always",      "",     1, 1, 1, 0, 0, TYPE_NONE,     parse_command_always},
-	{"colours",     "IIII", 1, 0, 0, 0, 0, TYPE_NONE,     parse_command_colours_menu},
-	{"colours",     "II",   1, 1, 0, 0, 0, TYPE_NONE,     parse_command_colours_item},
-	{"d_box",       "I",    1, 1, 0, 0, 0, TYPE_SUBMENU,  parse_command_dbox},
-	{"dotted",      "",     1, 1, 0, 0, 0, TYPE_NONE,     parse_command_dotted},
-	{"half",        "",     1, 1, 0, 0, 1, TYPE_NONE,     NULL},
-	{"indirected",  "I",    1, 0, 0, 0, 0, TYPE_NONE,     parse_command_indirected_menu},
-	{"indirected",  "I",    1, 1, 0, 0, 0, TYPE_NONE,     parse_command_indirected_item},
-	{"item",        "S",    1, 0, 0, 0, 0, TYPE_ITEM,     parse_command_item},
-	{"item_gap",    "I",    1, 0, 0, 0, 0, TYPE_NONE,     parse_command_item_gap},
-	{"item_height", "I",    1, 0, 0, 0, 0, TYPE_NONE,     parse_command_item_height},
-	{"menu",        "IS",   0, 0, 0, 0, 0, TYPE_MENU,     parse_command_menu},
-	{"reverse",     "",     1, 0, 0, 0, 0, TYPE_NONE,     parse_command_reverse},
-	{"shaded",      "",     1, 1, 0, 0, 0, TYPE_NONE,     parse_command_shaded},
-	{"sprite",      "",     1, 1, 0, 0, 0, TYPE_SPRITE,   NULL},
-	{"submenu",     "I",    1, 1, 0, 0, 0, TYPE_SUBMENU,  parse_command_submenu},
-	{"ticked",      "",     1, 1, 0, 0, 0, TYPE_NONE,     parse_command_ticked},
-	{"validation",  "S",    1, 1, 0, 1, 0, TYPE_NONE,     parse_command_validation},
-	{"warning",     "",     1, 1, 1, 0, 0, TYPE_NONE,     parse_command_warning},
-	{"writable",    "",     1, 1, 0, 0, 0, TYPE_WRITABLE, parse_command_writable}
+	{"always",	"",	true,	true,	true,	false,	false,	TYPE_NONE,	parse_command_always},
+	{"colours",	"IIII",	true,	false,	false,	false,	false,	TYPE_NONE,	parse_command_colours_menu},
+	{"colours",	"II",	true,	true,	false,	false,	false,	TYPE_NONE,	parse_command_colours_item},
+	{"d_box",	"I",	true,	true,	false,	false,	false,	TYPE_SUBMENU,	parse_command_dbox},
+	{"dotted",	"",	true,	true,	false,	false,	false,	TYPE_NONE,	parse_command_dotted},
+	{"half",	"",	true,	true,	false,	false,	true,	TYPE_NONE,	NULL},
+	{"indirected",	"I",	true,	false,	false,	false,	false,	TYPE_NONE,	parse_command_indirected_menu},
+	{"indirected",	"I",	true,	true,	false,	false,	false,	TYPE_NONE,	parse_command_indirected_item},
+	{"item",	"S",	true,	false,	false,	false,	false,	TYPE_ITEM,	parse_command_item},
+	{"item_gap",	"I",	true,	false,	false,	false,	false,	TYPE_NONE,	parse_command_item_gap},
+	{"item_height",	"I",	true,	false,	false,	false,	false,	TYPE_NONE,	parse_command_item_height},
+	{"menu",	"IS",	false,	false,	false,	false,	false,	TYPE_MENU,	parse_command_menu},
+	{"reverse",	"",	true,	false,	false,	false,	false,	TYPE_NONE,	parse_command_reverse},
+	{"shaded",	"",	true,	true,	false,	false,	false,	TYPE_NONE,	parse_command_shaded},
+	{"sprite",	"",	true,	true,	false,	false,	false,	TYPE_SPRITE,	NULL},
+	{"submenu",	"I",	true,	true,	false,	false,	false,	TYPE_SUBMENU,	parse_command_submenu},
+	{"ticked",	"",	true,	true,	false,	false,	false,	TYPE_NONE,	parse_command_ticked},
+	{"validation",	"S",	true,	true,	false,	true,	false,	TYPE_NONE,	parse_command_validation},
+	{"warning",	"",	true,	true,	true,	false,	false,	TYPE_NONE,	parse_command_warning},
+	{"writable",	"",	true,	true,	false,	false,	false,	TYPE_WRITABLE,	parse_command_writable}
 };
 
 /**
@@ -113,17 +115,17 @@ static const struct command_def command_list[] = {
  * to the parameter system.
  *
  * \Param  *filename		The file to process.
- * \Param  verbose		1 if verbose output is to be written to STDOUT.
- * \Return			0 if the parsing completed successfully; else 1.
+ * \Param  verbose		True if verbose output is to be written to STDOUT; else False.
+ * \Return			True if the parsing completed successfully; else False.
  */
 
-int parse_process_file(char *filename, int verbose)
+bool parse_process_file(char *filename, bool verbose)
 {
 	FILE	*f;
-	int	parse_error = 0, fatal_error = 0;
+	bool	parse_error = false, fatal_error = false;
 	int	c, last, len, pcount, i, cid;
-	int	comment = 0, string = 0;
-	int	menu = 0, item = 0, submenu = 0, writable = 0, sprite = 0;
+	bool	comment = false, string = false;
+	bool	menu = false, item = false, submenu = false, writable = false, sprite = false;
 	int	line_number = 1;
 	char	command[4096], params[MAX_PARAM_LIST][MAX_PARAM_LEN], types[64];
 
@@ -140,10 +142,10 @@ int parse_process_file(char *filename, int verbose)
 			if (c == '*' && last == '/') {
 				if (comment) {
 					printf("Nested comments at line %d\n", line_number);
-					parse_error = 1;
+					parse_error = true;
 				}
 
-				comment = 1;
+				comment = true;
 				if (len > 0)
 					len--;
 			}
@@ -151,10 +153,10 @@ int parse_process_file(char *filename, int verbose)
 			if (c == '/' && last == '*') {
 				if (!comment) {
 					printf("No comment to close at line %d\n", line_number);
-					parse_error = 1;
+					parse_error = true;
 				}
 
-				comment = 0;
+				comment = false;
 				c = '\0';
 			}
 
@@ -168,7 +170,7 @@ int parse_process_file(char *filename, int verbose)
 
 					if (pcount == 0) {
 						printf("Error processing command '%s' at line %d\n", command, line_number);
-						parse_error = 1;
+						parse_error = true;
 					}
 
 					cid = -1;
@@ -188,65 +190,69 @@ int parse_process_file(char *filename, int verbose)
 					if (cid != -1) {
 						if (strcmp(command_list[cid].params, types) == 0) {
 							if (command_list[cid].handler != NULL)
-								fatal_error = command_list[cid].handler(params);
+								fatal_error = !command_list[cid].handler(params);
 							if (fatal_error)
 								printf("Internal error processing '%s' command at line %d\n", command_list[cid].command, line_number);
 							else if (verbose)
 								printf("Found command %s as section head at line %d\n", command_list[cid].command, line_number);
 						} else {
 							printf("Bad parameters to '%s' at line %d\n", command_list[cid].command, line_number);
-							parse_error = 1;
+							parse_error = true;
 						}
 
 						stack_push(command_list[cid].new_type);
 						switch(command_list[cid].new_type) {
 						case TYPE_MENU:
-							menu = 1;
+							menu = true;
 							break;
 						case TYPE_ITEM:
-							item = 1;
+							item = true;
 							break;
 						case TYPE_SUBMENU:
-							submenu = 1;
+							submenu = true;
 							break;
 						case TYPE_WRITABLE:
-							writable = 1;
+							writable = true;
 							break;
 						case TYPE_SPRITE:
-							sprite = 1;
+							sprite = true;
+							break;
+						case TYPE_NONE:
 							break;
 						}
 					} else {
 						printf("Invalid command '%s' at line %d\n", command, line_number);
-						parse_error = 1;
+						parse_error = true;
 					}
 					len = 0;
 				} else if (c == '}' && !string) {
 					switch(stack_pop()) {
 					case TYPE_MENU:
-						menu = 0;
+						menu = false;
 						if (verbose)
 							printf("Closing menu at line %d\n", line_number);
 						break;
 					case TYPE_ITEM:
-						item = 0;
+						item = false;
 						if (verbose)
 							printf("Closing item at line %d\n", line_number);
 						break;
 					case TYPE_SUBMENU:
-						submenu = 0;
+						submenu = false;
 						if (verbose)
 							printf("Closing submenu or d_box at line %d\n", line_number);
 						break;
 					case TYPE_WRITABLE:
-						writable = 0;
+						writable = false;
 						if (verbose)
 							printf("Closing writable at line %d\n", line_number);
 						break;
 					case TYPE_SPRITE:
-						sprite = 0;
+						sprite = false;
 						if (verbose)
 							printf("Closing sprite at line %d\n", line_number);
+						break;
+					case TYPE_NONE:
 						break;
 					}
 					len = 0;
@@ -256,7 +262,7 @@ int parse_process_file(char *filename, int verbose)
 
 					if (pcount == 0) {
 						printf("Error processing command '%s' at line %d\n", command, line_number);
-						parse_error = 1;
+						parse_error = true;
 					}
 
 					cid = -1;
@@ -275,18 +281,18 @@ int parse_process_file(char *filename, int verbose)
 					if (cid != -1) {
 						if (strcmp(command_list[cid].params, types) == 0) {
 							if (command_list[cid].handler != NULL)
-								fatal_error = command_list[cid].handler(params);
+								fatal_error = !command_list[cid].handler(params);
 							if (fatal_error)
 								printf("Internal error processing '%s' command at line %d\n", command_list[cid].command, line_number);
 							else if (verbose)
 								printf("Found command %s standalone at line %d\n", command_list[cid].command, line_number);
 						} else {
 							printf("Bad parameters to '%s' at line %d\n", command_list[cid].command, line_number);
-							parse_error = 1;
+							parse_error = true;
 						}
 					} else {
 						printf("Invalid command '%s' at line %d\n", command, line_number);
-						parse_error = 1;
+						parse_error = true;
 					}
 					len = 0;
 				} else if (c != '\0') {
@@ -300,10 +306,10 @@ int parse_process_file(char *filename, int verbose)
 		fclose(f);
 	} else {
 		printf("Bad source file '%s'\n", filename);
-		fatal_error = 1;
+		fatal_error = true;
 	}
 
-	return (parse_error || fatal_error);
+	return (parse_error || fatal_error) ? false : true;
 }
 
 /**
@@ -311,16 +317,17 @@ int parse_process_file(char *filename, int verbose)
  * a set of strings and producing a list of types as a string in the form
  * "SI" for String-Integer.
  *
- * \Param  *params		An array of strings to take returned parameters
- * \Param  *line		The command line to parse
- * \Param  *types		A string to take the list of parameter types
- * \Return			The number of parameters found including
+ * \param *params		An array of strings to take returned parameters
+ * \param *line			The command line to parse
+ * \param *types		A string to take the list of parameter types
+ * \return			The number of parameters found including
  *				command name (so 0 == error)
  */
 
 int parse_find_parameters(char params[][MAX_PARAM_LEN], char *line, char *types)
 {
-	int	error = 0, entries = 0;
+	bool	error = false;
+	int	entries = 0;
 	char	*copy, *tail, *right, *end;
 
 	*types = '\0';
@@ -354,7 +361,7 @@ int parse_find_parameters(char params[][MAX_PARAM_LEN], char *line, char *types)
 			} else if (*tail != '"' || *right != '"') {
 				strcat(types, "I");
 			} else {
-				error = 1;
+				error = true;
 			}
 
 			strcpy(params[++entries], tail);
@@ -379,92 +386,92 @@ int parse_find_parameters(char params[][MAX_PARAM_LEN], char *line, char *types)
  * The various command handlers.
  */
 
-int parse_command_always(char params[][MAX_PARAM_LEN])
+static bool parse_command_always(char params[][MAX_PARAM_LEN])
 {
 	return data_set_item_when_shaded();
 }
 
-int parse_command_colours_menu(char params[][MAX_PARAM_LEN])
+static bool parse_command_colours_menu(char params[][MAX_PARAM_LEN])
 {
 	return data_set_menu_colours(atoi(params[1]), atoi(params[2]), atoi(params[3]), atoi(params[4]));
 }
 
-int parse_command_colours_item(char params[][MAX_PARAM_LEN])
+static bool parse_command_colours_item(char params[][MAX_PARAM_LEN])
 {
 	return data_set_item_colours(atoi(params[1]), atoi(params[2]));
 }
 
-int parse_command_dbox(char params[][MAX_PARAM_LEN])
+static bool parse_command_dbox(char params[][MAX_PARAM_LEN])
 {
-	return data_set_item_submenu(params[1], 1);
+	return data_set_item_submenu(params[1], true);
 }
 
-int parse_command_dotted(char params[][MAX_PARAM_LEN])
+static bool parse_command_dotted(char params[][MAX_PARAM_LEN])
 {
 	return data_set_item_dotted();
 }
 
-int parse_command_indirected_menu(char params[][MAX_PARAM_LEN])
+static bool parse_command_indirected_menu(char params[][MAX_PARAM_LEN])
 {
 	return data_set_menu_title_indirection(atoi(params[1]));
 }
 
-int parse_command_indirected_item(char params[][MAX_PARAM_LEN])
+static bool parse_command_indirected_item(char params[][MAX_PARAM_LEN])
 {
 	return data_set_item_indirection(atoi(params[1]));
 }
 
-int parse_command_item(char params[][MAX_PARAM_LEN])
+static bool parse_command_item(char params[][MAX_PARAM_LEN])
 {
 	return data_create_new_item(params[1]);
 }
 
-int parse_command_item_gap(char params[][MAX_PARAM_LEN])
+static bool parse_command_item_gap(char params[][MAX_PARAM_LEN])
 {
 	return data_set_menu_item_gap(atoi(params[1]));
 }
 
-int parse_command_item_height(char params[][MAX_PARAM_LEN])
+static bool parse_command_item_height(char params[][MAX_PARAM_LEN])
 {
 	return data_set_menu_item_height(atoi(params[1]));
 }
 
-int parse_command_menu(char params[][MAX_PARAM_LEN])
+static bool parse_command_menu(char params[][MAX_PARAM_LEN])
 {
 	return data_create_new_menu(params[1], params[2]);
 }
 
-int parse_command_reverse(char params[][MAX_PARAM_LEN])
+static bool parse_command_reverse(char params[][MAX_PARAM_LEN])
 {
 	return data_set_menu_reversed();
 }
 
-int parse_command_shaded(char params[][MAX_PARAM_LEN])
+static bool parse_command_shaded(char params[][MAX_PARAM_LEN])
 {
 	return data_set_item_shaded();
 }
 
-int parse_command_submenu(char params[][MAX_PARAM_LEN])
+static bool parse_command_submenu(char params[][MAX_PARAM_LEN])
 {
-	return data_set_item_submenu(params[1], 0);
+	return data_set_item_submenu(params[1], false);
 }
 
-int parse_command_ticked(char params[][MAX_PARAM_LEN])
+static bool parse_command_ticked(char params[][MAX_PARAM_LEN])
 {
 	return data_set_item_ticked();
 }
 
-int parse_command_validation(char params[][MAX_PARAM_LEN])
+static bool parse_command_validation(char params[][MAX_PARAM_LEN])
 {
 	return data_set_item_validation(params[1]);
 }
 
-int parse_command_warning(char params[][MAX_PARAM_LEN])
+static bool parse_command_warning(char params[][MAX_PARAM_LEN])
 {
 	return data_set_item_warning();
 }
 
-int parse_command_writable(char params[][MAX_PARAM_LEN])
+static bool parse_command_writable(char params[][MAX_PARAM_LEN])
 {
 	return data_set_item_writable();
 }

@@ -1,4 +1,4 @@
-/* Copyright 1996-2012, Stephen Fryatt (info@stevefryatt.org.uk)
+/* Copyright 1996-2015, Stephen Fryatt (info@stevefryatt.org.uk)
  *
  * This file is part of MenuGen:
  *
@@ -24,9 +24,11 @@
 #ifndef MENUGEN_STACK_H
 #define MENUGEN_STACK_H
 
+#include <stdbool.h>
+
 #define STACK_EMPTY -1
 
-int stack_initialise(int size);
+bool stack_initialise(int size);
 void stack_terminate(void);
 void stack_push(int value);
 int stack_pop(void);

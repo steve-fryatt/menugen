@@ -1,4 +1,4 @@
-/* Copyright 1996-2012, Stephen Fryatt (info@stevefryatt.org.uk)
+/* Copyright 1996-2015, Stephen Fryatt (info@stevefryatt.org.uk)
  *
  * This file is part of MenuGen:
  *
@@ -32,6 +32,7 @@
  *         -v  - Produce verbose output
  */
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -49,13 +50,14 @@
 
 #define MAX_STACK_SIZE 100
 
-static int verbose_output = 0;
-static int embed_dialogue_names = 0;
+static bool verbose_output = false;
+static bool embed_dialogue_names = false;
 
 
 int main(int argc, char *argv[])
 {
-	int	param, param_error = 0;
+	int	param;
+	bool	param_error = false;
 
 	stack_initialise(MAX_STACK_SIZE);
 
@@ -63,16 +65,16 @@ int main(int argc, char *argv[])
 	printf("Copyright Stephen Fryatt, 2001-%s\n", BUILD_DATE + 7);
 
 	if (argc < 3)
-		param_error = 1;
+		param_error = true;
 
 	if (!param_error) {
 		for (param = 3; param < argc; param++) {
 			if (strcmp(argv[param], "-d") == 0)
-				embed_dialogue_names = 1;
+				embed_dialogue_names = true;
 			else if (strcmp(argv[param], "-v") == 0)
-				verbose_output = 1;
+				verbose_output = true;
 			else
-				param_error = 1;
+				param_error = true;
 		}
 	}
 
@@ -82,7 +84,7 @@ int main(int argc, char *argv[])
 	}
 
 	printf("Starting to parse menu definition file...\n");
-	if (parse_process_file(argv[1], verbose_output)) {
+	if (!parse_process_file(argv[1], verbose_output)) {
 		printf("Errors in source file: terminating.\n");
 		return 1;
 	}

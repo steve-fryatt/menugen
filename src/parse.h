@@ -1,4 +1,4 @@
-/* Copyright 1996-2012, Stephen Fryatt (info@stevefryatt.org.uk)
+/* Copyright 1996-2015, Stephen Fryatt (info@stevefryatt.org.uk)
  *
  * This file is part of MenuGen:
  *
@@ -24,7 +24,9 @@
 #ifndef MENUGEN_PARSE_H
 #define MENUGEN_PARSE_H
 
-int parse_process_file(char *filename, int verbose);
+#include <stdbool.h>
+
+bool parse_process_file(char *filename, bool verbose);
 
 #endif
 

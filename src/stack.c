@@ -1,4 +1,4 @@
-/* Copyright 1996-2012, Stephen Fryatt (info@stevefryatt.org.uk)
+/* Copyright 1996-2015, Stephen Fryatt (info@stevefryatt.org.uk)
  *
  * This file is part of MenuGen:
  *
@@ -21,6 +21,7 @@
  * permissions and limitations under the Licence.
  */
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 /* Local source headers. */
@@ -34,18 +35,18 @@ static int *stack = NULL;
 /**
  * Initialise the stack.
  *
- * \Param  size		The number of integers that the stack will hold.
- * \Return		0 if the initialise was successful; else 1.
+ * \param size		The number of integers that the stack will hold.
+ * \return		True if the initialise was successful; else False.
  */
 
-int stack_initialise(int size)
+bool stack_initialise(int size)
 {
 	stack_size = size;
 	stack_ptr = -1;
 
 	stack = (int *) malloc(sizeof(int) * stack_size);
 
-	return (stack == NULL) ? 1 : 0;
+	return (stack == NULL) ? false : true;
 }
 
 /**
