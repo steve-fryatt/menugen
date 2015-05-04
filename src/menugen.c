@@ -50,13 +50,12 @@
 
 #define MAX_STACK_SIZE 100
 
-static bool verbose_output = false;
-static bool embed_dialogue_names = false;
-
-
 int main(int argc, char *argv[])
 {
 	int	param;
+	bool	verbose_output = false;
+	bool	embed_dialogue_names = false;
+	bool	embed_menu_names = false;
 	bool	param_error = false;
 
 	stack_initialise(MAX_STACK_SIZE);
@@ -71,6 +70,8 @@ int main(int argc, char *argv[])
 		for (param = 3; param < argc; param++) {
 			if (strcmp(argv[param], "-d") == 0)
 				embed_dialogue_names = true;
+			else if (strcmp(argv[param], "-m") == 0)
+				embed_menu_names = true;
 			else if (strcmp(argv[param], "-v") == 0)
 				verbose_output = true;
 			else
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
 	}
 
 	if (param_error) {
-		printf("Usage: menugen <sourcefile> <output> [-d] [-v]\n");
+		printf("Usage: menugen <sourcefile> <output> [-d] [-m] [-v]\n");
 		return 1;
 	}
 
