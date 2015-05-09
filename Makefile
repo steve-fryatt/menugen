@@ -138,7 +138,7 @@ MANSRC := Source
 MANSPR := ManSprite
 
 GENOBJS := data.o menugen.o parse.o stack.o
-TESTOBJS := menutest.o
+TESTOBJS := file.o menutest.o parse.o
 
 # Build everything, but don't package it for release.
 
