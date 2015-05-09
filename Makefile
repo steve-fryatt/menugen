@@ -66,7 +66,7 @@ else
   CC := gcc
 endif
 
-MKDIR := mkdir
+MKDIR := mkdir -p
 RM := rm -rf
 CP := cp
 
@@ -103,60 +103,59 @@ LINKS := -L$(GCCSDK_INSTALL_ENV)/lib
 
 SRCDIR := src
 MANUAL := manual
-OBJDIR := obj
+OBJROOT := obj
+OBJLINUX := linux
+OBJRO := ro
+GENDIR := gen
+TESTDIR := test
 OUTDIRLINUX := buildlinux
 OUTDIRRO:= buildro
 ifeq ($(TARGET),riscos)
+  OBJDIR := $(OBJROOT)/$(OBJRO)
   OUTDIR := $(OUTDIRRO)
 else
+  OBJDIR := $(OBJROOT)/$(OBJLINUX)
   OUTDIR := $(OUTDIRLINUX)
 endif
-
-
 
 # Set up the named target files.
 
 ifeq ($(TARGET),riscos)
-  RUNIMAGE := menugen,ff8
+  MENUGEN := menugen,ff8
+  MENUTEST := menutest,ff8
   README := ReadMe,fff
   LICENSE := Licence,fff
 else
-  RUNIMAGE := menugen
+  MENUGEN := menugen
+  MENUTEST := menutest
   README := ReadMe.txt
   LICENSE := Licence.txt
 endif
-
 
 # Set up the source files.
 
 MANSRC := Source
 MANSPR := ManSprite
 
-OBJS := data.o menugen.o parse.o stack.o
-
+GENOBJS := data.o menugen.o parse.o stack.o
+TESTOBJS := menutest.o
 
 # Build everything, but don't package it for release.
 
-all: documentation $(OUTDIR)/$(RUNIMAGE)
+all: documentation $(OUTDIR)/$(MENUGEN) $(OUTDIR)/$(MENUTEST)
 
+# Build the complete MenuGen from the object files.
 
-# Build the complete !RunImage from the object files.
+GENOBJS := $(addprefix $(OBJDIR)/$(GENDIR)/, $(GENOBJS))
 
-OBJS := $(addprefix $(OBJDIR)/, $(OBJS))
-
-$(OUTDIR)/$(RUNIMAGE): $(OBJS) $(OBJDIR)
-	$(CC) $(CCFLAGS) $(LINKS) -o $(OUTDIR)/$(RUNIMAGE) $(OBJS)
-
-# Create a folder to hold the object files.
-
-$(OBJDIR):
-	$(MKDIR) $(OBJDIR)
+$(OUTDIR)/$(MENUGEN): $(OBJDIR)/$(GENDIR)/ $(GENOBJS)
+	$(CC) $(CCFLAGS) $(LINKS) -o $(OUTDIR)/$(MENUGEN) $(GENOBJS)
 
 # Build the object files, and identify their dependencies.
 
--include $(OBJS:.o=.d)
+-include $(GENOBJS:.o=.d)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
+$(OBJDIR)/$(GENDIR)/%.o: $(SRCDIR)/$(GENDIR)/%.c
 	$(CC) -c $(CCFLAGS) $(INCLUDES) $< -o $@
 	@$(CC) -MM $(CCFLAGS) $(INCLUDES) $< > $(@:.o=.d)
 	@mv -f $(@:.o=.d) $(@:.o=.d).tmp
@@ -164,6 +163,34 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@sed -e 's/.*://' -e 's/\\$$//' < $(@:.o=.d).tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(@:.o=.d)
 	@rm -f $(@:.o=.d).tmp
 
+# Create a folder to hold the object files.
+
+$(OBJDIR)/$(GENDIR):
+	$(MKDIR) $(OBJDIR)/$(GENDIR)
+
+# Build the complete MenuTest from the object files.
+
+TESTOBJS := $(addprefix $(OBJDIR)/$(TESTDIR)/, $(TESTOBJS))
+
+$(OUTDIR)/$(MENUTEST): $(OBJDIR)/$(TESTDIR)/ $(TESTOBJS)
+	$(CC) $(CCFLAGS) $(LINKS) -o $(OUTDIR)/$(MENUTEST) $(TESTOBJS)
+
+# Build the object files, and identify their dependencies.
+
+-include $(TESTOBJS:.o=.d)
+
+$(OBJDIR)/$(TESTDIR)/%.o: $(SRCDIR)/$(TESTDIR)/%.c
+	$(CC) -c $(CCFLAGS) $(INCLUDES) $< -o $@
+	@$(CC) -MM $(CCFLAGS) $(INCLUDES) $< > $(@:.o=.d)
+	@mv -f $(@:.o=.d) $(@:.o=.d).tmp
+	@sed -e 's|.*:|$@:|' < $(@:.o=.d).tmp > $(@:.o=.d)
+	@sed -e 's/.*://' -e 's/\\$$//' < $(@:.o=.d).tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(@:.o=.d)
+	@rm -f $(@:.o=.d).tmp
+
+# Create a folder to hold the object files.
+
+$(OBJDIR)/$(TESTDIR):
+	$(MKDIR) $(OBJDIR)/$(TESTDIR)
 
 # Build the documentation
 
@@ -172,12 +199,11 @@ documentation: $(OUTDIR)/$(README)
 $(OUTDIR)/$(README): $(MANUAL)/$(MANSRC)
 	$(MANTOOLS) -MTEXT -I$(MANUAL)/$(MANSRC) -O$(OUTDIR)/$(README) -D'version=$(HELP_VERSION)' -D'date=$(HELP_DATE)'
 
-
 # Build the release Zip file.
 
 release: clean all
 	$(RM) ../$(ZIPFILE)
-	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../../$(ZIPFILE) $(RUNIMAGE) $(README) $(LICENSE))
+	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../../$(ZIPFILE) $(MENUGEN) $(MENUTEST) $(README) $(LICENSE))
 	$(RM) ../$(SRCZIPFILE)
 	$(ZIP) $(SRCZIPFLAGS) ../$(SRCZIPFILE) $(OUTDIRLINUX) $(OUTDIRRO) $(SRCDIR) $(MANUAL) Makefile
 
@@ -192,13 +218,15 @@ backup:
 # Install the finished version in the GCCSDK, ready for use.
 
 install: clean all
-	$(CP) -r $(OUTDIR)/$(RUNIMAGE) $(SFTOOLS_BIN)
+	$(CP) -r $(OUTDIR)/$(MENUGEN) $(SFTOOLS_BIN)
+#	$(CP) -r $(OUTDIR)/$(MENUTEST) $(SFTOOLS_BIN)
 
 
 # Clean targets
 
 clean:
 	$(RM) $(OBJDIR)/*
-	$(RM) $(OUTDIR)/$(RUNIMAGE)
+	$(RM) $(OUTDIR)/$(MENUGEN)
+	$(RM) $(OUTDIR)/$(MENUTEST)
 	$(RM) $(OUTDIR)/$(README)
 
