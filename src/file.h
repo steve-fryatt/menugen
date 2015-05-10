@@ -33,10 +33,14 @@
  * Standard file data structures, used to build the standard menu file.
  */
 
+/**
+ * File head block, with offsets to internal data structures.
+ */
+
 struct file_head_block {
-	int		dialogues;
-	int		indirection;
-	int		validation;
+	int		dialogues;		/**< Offset to the dialogue list.		*/
+	int		indirection;		/**< Offset to the indirection data list.	*/
+	int		validation;		/**< Offset to the validation data list.	*/
 };
 
 struct file_menu_head_block {
@@ -55,14 +59,17 @@ struct file_menu_start_name_block{
 	char		tag[];		/* Placeholder! */
 };
 
+struct file_indirected_text {
+	int		indirection;
+	int		validation;
+	int		size;
+};
+
+
 struct file_menu_block {
 	union {
-		char		text[12];
-		struct {
-			int		indirection;
-			int		validation;
-			int		size;
-		} indirected_text;
+		char				text[12];
+		struct file_indirected_text	indirected_text;
 	} title_data;
 	wimp_colour	title_fg;
 	wimp_colour	title_bg;

@@ -23,6 +23,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 /* We use types from this, but don't try to link to any subroutines! */
@@ -37,7 +38,7 @@
 
 
 
-
+static void parse_process_indirected_data(int8_t *file, size_t length);
 static void	parse_process_menus(int8_t *file, size_t length);
 
 /**
@@ -53,7 +54,39 @@ void parse_process(int8_t *file, size_t length)
 	if (file == NULL)
 		return;
 
+	parse_process_indirected_data(file, length);
 	parse_process_menus(file, length);
+}
+
+
+static void parse_process_indirected_data(int8_t *file, size_t length)
+{
+	int	offset;
+	struct file_head_block		*file_head = (struct file_head_block *) file;
+	struct file_indirection_block	*data;
+	struct file_indirected_text	*indirection;
+
+	if (file == NULL)
+		return;
+
+	offset = file_head->indirection;
+
+	do {
+		data = (struct file_indirection_block *) (file + offset);
+
+		if (data->location == -1)
+			continue;
+
+		indirection = (struct file_indirected_text *) (file + data->location);
+
+
+		printf("Indirection: %s (size %d)\n", data->data, indirection->size);
+
+		indirection->indirection = (int) file + offset + 4;
+
+		offset += (indirection->size + 7) & (~3);
+
+	} while (data->location != -1);
 }
 
 
@@ -74,9 +107,9 @@ static void parse_process_menus(int8_t *file, size_t length)
 
 
 		if ((item_block->menu_flags & wimp_MENU_TITLE_INDIRECTED) != 0) {
-			printf("Menu: Indirected Title at %d\n", menu_block->title_data.indirected_text.indirection);
+			printf("Menu: Indirected title %s\n", (char *) menu_block->title_data.indirected_text.indirection);
 		} else {
-			printf("Menu: %s\n", menu_block->title_data.text);
+			printf("Menu: Fixed title %s\n", menu_block->title_data.text);
 		}
 
 		menu_offset = menu_header->next;
