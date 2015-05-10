@@ -104,7 +104,11 @@ static void parse_process_indirected_data(int8_t *file, size_t length)
 
 		printf("  %d bytes: '%s'\n", indirection->size, data->data);
 
-		indirection->indirection = (int) file + offset + 4;
+		/* Store an offset for the indirected text, not a pointer,
+		 * as MenuTest could be running on a 64 bit system.
+		 */
+
+		indirection->indirection = offset + 4;
 
 		offset += (indirection->size + 7) & (~3);
 
@@ -151,7 +155,11 @@ static void parse_process_validation_data(int8_t *file, size_t length)
 
 		printf("  %d bytes: '%s'\n", data->length, data->data);
 
-		indirection->validation = (int) file + offset + 8;
+		/* Store an offset for the validation string, not a pointer,
+		 * as MenuTest could be running on a 64 bit system.
+		 */
+
+		indirection->validation = offset + 8;
 
 		offset += data->length;
 
@@ -227,7 +235,11 @@ static void parse_process_menus(int8_t *file, size_t length)
 		printf("---------\n");
 
 		if ((item_block->menu_flags & wimp_MENU_TITLE_INDIRECTED) != 0) {
-			printf("  Indirected title: '%s'\n", (char *) menu_block->title_data.indirected_text.indirection);
+			/* The indirection field is an offset into the file block here,
+			 * as MenuTest could be running on a 64 bit system making it
+			 * unsafe to store an actual pointer.
+			 */
+			printf("  Indirected title: '%s'\n", (char *) (file + menu_block->title_data.indirected_text.indirection));
 		} else {
 			strncpy(text, menu_block->title_data.text, 12);
 			printf("  Fixed title: '%s'\n", text);
