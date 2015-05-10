@@ -38,8 +38,10 @@
 
 
 
-static void parse_process_indirected_data(int8_t *file, size_t length);
+static void	parse_process_indirected_data(int8_t *file, size_t length);
+static void	parse_process_validation_data(int8_t *file, size_t length);
 static void	parse_process_menus(int8_t *file, size_t length);
+
 
 /**
  * Load a file into memory, returning a pointer to a malloc()-claimed block
@@ -55,9 +57,18 @@ void parse_process(int8_t *file, size_t length)
 		return;
 
 	parse_process_indirected_data(file, length);
+	parse_process_validation_data(file, length);
 	parse_process_menus(file, length);
 }
 
+
+/**
+ * Process the indirected data in the file, parsing the list of strings and
+ * linking in the pointers in the menu data.
+ *
+ * \param *file		Pointer to the file data to be processed.
+ * \param length	The length of the data block.
+ */
 
 static void parse_process_indirected_data(int8_t *file, size_t length)
 {
@@ -68,6 +79,14 @@ static void parse_process_indirected_data(int8_t *file, size_t length)
 
 	if (file == NULL)
 		return;
+
+	printf("\nIndirected Text Data\n");
+	printf("--------------------\n");
+
+	if (file_head->indirection == -1) {
+		printf("  No Data\n");
+		return;
+	}
 
 	offset = file_head->indirection;
 
@@ -80,11 +99,58 @@ static void parse_process_indirected_data(int8_t *file, size_t length)
 		indirection = (struct file_indirected_text *) (file + data->location);
 
 
-		printf("Indirection: %s (size %d)\n", data->data, indirection->size);
+		printf("  %d bytes: '%s'\n", indirection->size, data->data);
 
 		indirection->indirection = (int) file + offset + 4;
 
 		offset += (indirection->size + 7) & (~3);
+
+	} while (data->location != -1);
+}
+
+
+/**
+ * Process the validation string data in the file, parsing the list of strings
+ * and linking in the pointers in the menu data.
+ *
+ * \param *file		Pointer to the file data to be processed.
+ * \param length	The length of the data block.
+ */
+
+static void parse_process_validation_data(int8_t *file, size_t length)
+{
+	int	offset;
+	struct file_head_block		*file_head = (struct file_head_block *) file;
+	struct file_validation_block	*data;
+	struct file_indirected_text	*indirection;
+
+	if (file == NULL)
+		return;
+
+	printf("\nValidation String Data\n");
+	printf("----------------------\n");
+
+	if (file_head->validation == -1) {
+		printf("  No Data\n");
+		return;
+	}
+
+	offset = file_head->validation;
+
+	do {
+		data = (struct file_validation_block *) (file + offset);
+
+		if (data->location == -1)
+			continue;
+
+		indirection = (struct file_indirected_text *) (file + data->location - 4);
+
+
+		printf("  %d bytes: '%s'\n", data->length, data->data);
+
+		indirection->validation = (int) file + offset + 8;
+
+		offset += (data->length + 7);
 
 	} while (data->location != -1);
 }

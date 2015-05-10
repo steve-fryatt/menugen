@@ -59,11 +59,17 @@ struct file_menu_start_name_block{
 	char		tag[];		/* Placeholder! */
 };
 
+/**
+ * The block of icon data associated with an indirected text icon in a Wimp
+ * icon block.
+ */
+
 struct file_indirected_text {
-	int		indirection;
-	int		validation;
-	int		size;
+	int		indirection;		/**< Pointer to the indirected text.		*/
+	int		validation;		/**< Pointer to the validation string.		*/
+	int		size;			/**< Size of the indirected text, in bytes.	*/
 };
+
 
 
 struct file_menu_block {
@@ -94,15 +100,23 @@ struct file_item_block {
 	} icon_data;
 };
 
+/**
+ * Indirection data item.
+ */
+
 struct file_indirection_block {
-	int		location;
-	char		data[];		/* Placeholder! */
+	int		location;		/**< Offset to the associated indirection item.	*/
+	char		data[];			/**< Zero length placeholder for the text.	*/
 };
 
+/**
+ * Validation data item.
+ */
+
 struct file_validation_block {
-	int		location;
-	int		length;
-	char		data[];		/* Placeholder! */
+	int		location;		/**< Offset to the associated validation item.	*/
+	int		length;			/**< The total length of the block.		*/
+	char		data[];			/**< Zero length placeholder for the string.	*/
 };
 
 struct file_dialogue_head_block {
