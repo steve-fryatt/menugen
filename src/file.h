@@ -119,12 +119,21 @@ struct file_validation_block {
 	char		data[];			/**< Zero length placeholder for the string.	*/
 };
 
+/**
+ * New format dialogue header item. This appears at the dialogue data
+ * offset in new format files to indicate the new format.
+ */
+
 struct file_dialogue_head_block {
-	int		zero;
+	int		zero;			/**< Zero to signify new data format.		*/
 };
 
+/**
+ * New format dialogue list header.
+ */
+
 struct file_dialogue_tag_block {
-	int		dialogues;
-	char		tag[];		/* Placeholder! */
+	int		dialogues;		/**< Offset to the first dialogue entry.	*/
+	char		tag[];			/**< Zero length placeholder for the name.	*/
 };
 

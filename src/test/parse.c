@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 /* We use types from this, but don't try to link to any subroutines! */
 
@@ -40,6 +41,7 @@
 
 static void	parse_process_indirected_data(int8_t *file, size_t length);
 static void	parse_process_validation_data(int8_t *file, size_t length);
+static void	parse_process_dialogues(int8_t *file, size_t length);
 static void	parse_process_menus(int8_t *file, size_t length);
 
 
@@ -58,6 +60,7 @@ void parse_process(int8_t *file, size_t length)
 
 	parse_process_indirected_data(file, length);
 	parse_process_validation_data(file, length);
+	parse_process_dialogues(file, length);
 	parse_process_menus(file, length);
 }
 
@@ -72,7 +75,7 @@ void parse_process(int8_t *file, size_t length)
 
 static void parse_process_indirected_data(int8_t *file, size_t length)
 {
-	int	offset;
+	int				offset;
 	struct file_head_block		*file_head = (struct file_head_block *) file;
 	struct file_indirection_block	*data;
 	struct file_indirected_text	*indirection;
@@ -119,7 +122,7 @@ static void parse_process_indirected_data(int8_t *file, size_t length)
 
 static void parse_process_validation_data(int8_t *file, size_t length)
 {
-	int	offset;
+	int				offset;
 	struct file_head_block		*file_head = (struct file_head_block *) file;
 	struct file_validation_block	*data;
 	struct file_indirected_text	*indirection;
@@ -150,35 +153,91 @@ static void parse_process_validation_data(int8_t *file, size_t length)
 
 		indirection->validation = (int) file + offset + 8;
 
-		offset += (data->length + 7);
+		offset += data->length;
 
 	} while (data->location != -1);
+}
+
+
+static void parse_process_dialogues(int8_t *file, size_t length)
+{
+	int				offset;
+	struct file_head_block		*file_head = (struct file_head_block *) file;
+	struct file_dialogue_head_block	*head;
+	struct file_dialogue_tag_block	*data;
+
+	if (file == NULL)
+		return;
+
+	printf("\nDialogue Data\n");
+	printf("------------\n");
+
+	if (file_head->dialogues == -1) {
+		printf("  No Data\n");
+		return;
+	}
+
+	offset = file_head->dialogues;
+
+	head = (struct file_dialogue_head_block *) (file + offset);
+
+	if (head->zero != 0) {
+		printf("  Single dialogue chain (old format)\n");
+		return;
+	}
+
+	offset += 4;
+
+	do {
+		data = (struct file_dialogue_tag_block *) (file + offset);
+
+		if (data->dialogues == -1)
+			continue;
+
+		printf("  Dialogue list: '%s'\n", data->tag);
+
+		offset += (strlen(data->tag) + 8) & (~3);
+
+	} while (data->dialogues != -1);
 }
 
 
 
 static void parse_process_menus(int8_t *file, size_t length)
 {
-	int				menu_offset;
+	int				offset;
 	struct file_menu_start_block	*menu_header;
 	struct file_menu_block		*menu_block;
 	struct file_item_block		*item_block;
+	char				text[13];
 
-	menu_offset = 20;
+	if (file == NULL)
+		return;
 
-	while (menu_offset != -1) {
-		menu_header = (struct file_menu_start_block *) (file + menu_offset - 8);
-		menu_block = (struct file_menu_block *) (file + menu_offset);
-		item_block = (struct file_item_block *) (file + menu_offset + 28);
+	text[12] = '\0';
 
+	offset = 20;
+
+	while (offset != -1) {
+		menu_header = (struct file_menu_start_block *) (file + offset - 8);
+		menu_block = (struct file_menu_block *) (file + offset);
+		item_block = (struct file_item_block *) (file + offset + 28);
+
+		printf("\nMenu Data\n");
+		printf("---------\n");
 
 		if ((item_block->menu_flags & wimp_MENU_TITLE_INDIRECTED) != 0) {
-			printf("Menu: Indirected title %s\n", (char *) menu_block->title_data.indirected_text.indirection);
+			printf("  Indirected title: '%s'\n", (char *) menu_block->title_data.indirected_text.indirection);
 		} else {
-			printf("Menu: Fixed title %s\n", menu_block->title_data.text);
+			strncpy(text, menu_block->title_data.text, 12);
+			printf("  Fixed title: '%s'\n", text);
 		}
 
-		menu_offset = menu_header->next;
+		printf("  Width: %d\n", menu_block->width);
+		printf("  Height: %d\n", menu_block->height);
+		printf("  Gap: %d\n", menu_block->gap);
+
+		offset = menu_header->next;
 	}
 
 }
