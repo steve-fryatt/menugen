@@ -28,6 +28,7 @@
 //#define NULL_OFFSET -1
 //#define NO_SUBMENU  -1
 
+#define FILE_ITEM_TEXT_LENGTH 12
 
 /**
  * Standard file data structures, used to build the standard menu file.
@@ -38,25 +39,25 @@
  */
 
 struct file_head_block {
-	int		dialogues;		/**< Offset to the dialogue list.		*/
-	int		indirection;		/**< Offset to the indirection data list.	*/
-	int		validation;		/**< Offset to the validation data list.	*/
+	int				dialogues;			/**< Offset to the dialogue list.		*/
+	int				indirection;			/**< Offset to the indirection data list.	*/
+	int				validation;			/**< Offset to the validation data list.	*/
 };
 
 struct file_menu_head_block {
-	int		zero;
-	int		flags;
+	int				zero;
+	int				flags;
 };
 
 struct file_menu_start_block {
-	int		next;
-	int		submenus;
+	int				next;
+	int				submenus;
 };
 
 struct file_menu_start_name_block{
-	int		next;
-	int		submenus;
-	char		tag[];		/* Placeholder! */
+	int				next;
+	int				submenus;
+	char				tag[];		/* Placeholder! */
 };
 
 /**
@@ -65,39 +66,45 @@ struct file_menu_start_name_block{
  */
 
 struct file_indirected_text {
-	int		indirection;		/**< Pointer to the indirected text.		*/
-	int		validation;		/**< Pointer to the validation string.		*/
-	int		size;			/**< Size of the indirected text, in bytes.	*/
+	int				indirection;			/**< Pointer to the indirected text.		*/
+	int				validation;			/**< Pointer to the validation string.		*/
+	int				size;				/**< Size of the indirected text, in bytes.	*/
 };
 
+/**
+ * Menu item or title text, which can either be a straight text string
+ * or an indirected text block.
+ */
 
+union file_item_text {
+	char				text[FILE_ITEM_TEXT_LENGTH];	/**< A straight text string.			*/
+	struct file_indirected_text	indirected_text;		/**< An indirected text data block.		*/
+};
+
+/**
+ * Wimp menu header block.
+ */
 
 struct file_menu_block {
-	union {
-		char				text[12];
-		struct file_indirected_text	indirected_text;
-	} title_data;
-	wimp_colour	title_fg;
-	wimp_colour	title_bg;
-	wimp_colour	work_fg;
-	wimp_colour	work_bg;
-	int		width;
-	int		height;
-	int		gap;
+	union file_item_text		title_data;			/**< The menu title text.			*/
+	wimp_colour			title_fg;			/**< The menu title foreground colour.		*/
+	wimp_colour			title_bg;			/**< The menu title background colour.		*/
+	wimp_colour			work_fg;			/**< The menu workarea foreground colour.	*/
+	wimp_colour			work_bg;			/**< The menu workarea background colour.	*/
+	int				width;				/**< The width of the menu, in OS units.	*/
+	int				height;				/**< The height of a menu entry, in OS units.	*/
+	int				gap;				/**< The inter-entry gap, in OS units.		*/
 };
 
+/**
+ * Wimp menu item block.
+ */
+
 struct file_item_block {
-	wimp_menu_flags	menu_flags;
-	int		submenu_file_offset;
-	wimp_icon_flags	icon_flags;
-	union {
-		char		text[12];
-		struct {
-			int		indirection;
-			int		validation;
-			int		size;
-		} indirected_text;
-	} icon_data;
+	wimp_menu_flags			menu_flags;			/**< The item's menu flags.			*/
+	int				submenu_file_offset;		/**< Submenu offset data.			*/
+	wimp_icon_flags			icon_flags;			/**< The item's icon flags.			*/
+	union file_item_text		icon_data;			/**< The menu item's text.			*/
 };
 
 /**
@@ -105,8 +112,8 @@ struct file_item_block {
  */
 
 struct file_indirection_block {
-	int		location;		/**< Offset to the associated indirection item.	*/
-	char		data[];			/**< Zero length placeholder for the text.	*/
+	int				location;			/**< Offset to the associated indirection item.	*/
+	char				data[];				/**< Zero length placeholder for the text.	*/
 };
 
 /**
@@ -114,9 +121,9 @@ struct file_indirection_block {
  */
 
 struct file_validation_block {
-	int		location;		/**< Offset to the associated validation item.	*/
-	int		length;			/**< The total length of the block.		*/
-	char		data[];			/**< Zero length placeholder for the string.	*/
+	int				location;			/**< Offset to the associated validation item.	*/
+	int				length;				/**< The total length of the block.		*/
+	char				data[];				/**< Zero length placeholder for the string.	*/
 };
 
 /**
@@ -125,7 +132,7 @@ struct file_validation_block {
  */
 
 struct file_dialogue_head_block {
-	int		zero;			/**< Zero to signify new data format.		*/
+	int				zero;				/**< Zero to signify new data format.		*/
 };
 
 /**
@@ -133,7 +140,7 @@ struct file_dialogue_head_block {
  */
 
 struct file_dialogue_tag_block {
-	int		dialogues;		/**< Offset to the first dialogue entry.	*/
-	char		tag[];			/**< Zero length placeholder for the name.	*/
+	int				dialogues;			/**< Offset to the first dialogue entry.	*/
+	char				tag[];				/**< Zero length placeholder for the name.	*/
 };
 

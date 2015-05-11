@@ -217,12 +217,13 @@ static void parse_process_menus(int8_t *file, size_t length)
 	struct file_menu_start_block	*menu_header;
 	struct file_menu_block		*menu_block;
 	struct file_item_block		*item_block;
-	char				text[13];
+	char				text[FILE_ITEM_TEXT_LENGTH + 1];
+	bool				last_item;
 
 	if (file == NULL)
 		return;
 
-	text[12] = '\0';
+	text[FILE_ITEM_TEXT_LENGTH] = '\0';
 
 	offset = 20;
 
@@ -234,20 +235,40 @@ static void parse_process_menus(int8_t *file, size_t length)
 		printf("\nMenu Data\n");
 		printf("---------\n");
 
-		if ((item_block->menu_flags & wimp_MENU_TITLE_INDIRECTED) != 0) {
+		if (item_block->menu_flags & wimp_MENU_TITLE_INDIRECTED) {
 			/* The indirection field is an offset into the file block here,
 			 * as MenuTest could be running on a 64 bit system making it
 			 * unsafe to store an actual pointer.
 			 */
 			printf("  Indirected title: '%s'\n", (char *) (file + menu_block->title_data.indirected_text.indirection));
 		} else {
-			strncpy(text, menu_block->title_data.text, 12);
+			strncpy(text, menu_block->title_data.text, FILE_ITEM_TEXT_LENGTH);
 			printf("  Fixed title: '%s'\n", text);
 		}
 
 		printf("  Width: %d\n", menu_block->width);
 		printf("  Height: %d\n", menu_block->height);
 		printf("  Gap: %d\n", menu_block->gap);
+
+		last_item = false;
+
+		do {
+			if (item_block->icon_flags & wimp_ICON_INDIRECTED) {
+				/* The indirection field is an offset into the file block here,
+				 * as MenuTest could be running on a 64 bit system making it
+				 * unsafe to store an actual pointer.
+				 */
+				printf("  * Indirected entry: '%s'\n", (char *) (file + item_block->icon_data.indirected_text.indirection));
+			} else {
+				strncpy(text, item_block->icon_data.text, FILE_ITEM_TEXT_LENGTH);
+				printf("  * Fixed entry: '%s'\n", text);
+			}
+		
+			if (item_block->menu_flags & wimp_MENU_LAST)
+				last_item = true;
+			else
+				item_block += 1;
+		} while (!last_item);
 
 		offset = menu_header->next;
 	}
