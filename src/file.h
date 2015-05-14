@@ -49,16 +49,16 @@ struct file_menu_head_block {
 	int				flags;
 };
 
-struct file_menu_start_block {
-	int				next;
-	int				submenus;
-};
+//struct file_menu_start_block {
+//	int				next;
+//	int				submenus;
+//};
 
-struct file_menu_start_name_block{
-	int				next;
-	int				submenus;
-	char				tag[];		/* Placeholder! */
-};
+//struct file_menu_start_name_block{
+//	int				next;
+//	int				submenus;
+//	char				tag[];		/* Placeholder! */
+//};
 
 /**
  * The block of icon data associated with an indirected text icon in a Wimp
@@ -86,6 +86,8 @@ union file_item_text {
  */
 
 struct file_menu_block {
+	int				next;
+	int				submenus;
 	union file_item_text		title_data;			/**< The menu title text.			*/
 	wimp_colour			title_fg;			/**< The menu title foreground colour.		*/
 	wimp_colour			title_bg;			/**< The menu title background colour.		*/

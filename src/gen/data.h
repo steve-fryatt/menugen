@@ -30,7 +30,7 @@
 #define MAX_TAG_LEN 32
 #define MAX_TEMPLATE_NAME 16
 
-bool data_collate_structures(bool embed_dbox, bool verbose);
+bool data_collate_structures(bool embed_tag, bool embed_dbox, bool verbose);
 void data_print_structure_report(void);
 bool data_write_standard_menu_file(char *filename);
 

@@ -214,7 +214,6 @@ static void parse_process_dialogues(int8_t *file, size_t length)
 static void parse_process_menus(int8_t *file, size_t length)
 {
 	int				offset;
-	struct file_menu_start_block	*menu_header;
 	struct file_menu_block		*menu_block;
 	struct file_item_block		*item_block;
 	char				text[FILE_ITEM_TEXT_LENGTH + 1];
@@ -228,8 +227,7 @@ static void parse_process_menus(int8_t *file, size_t length)
 	offset = 20;
 
 	while (offset != -1) {
-		menu_header = (struct file_menu_start_block *) (file + offset - 8);
-		menu_block = (struct file_menu_block *) (file + offset);
+		menu_block = (struct file_menu_block *) (file + offset - 8);
 		item_block = (struct file_item_block *) (file + offset + 28);
 
 		printf("\nMenu Data\n");
@@ -270,7 +268,7 @@ static void parse_process_menus(int8_t *file, size_t length)
 				item_block += 1;
 		} while (!last_item);
 
-		offset = menu_header->next;
+		offset = menu_block->next;
 	}
 
 }

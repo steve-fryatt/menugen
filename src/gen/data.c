@@ -158,6 +158,8 @@ static int			longest_indirection = 0;
 static int			longest_validation = 0;
 static int			longest_dbox_chain = 0;
 
+static bool			embedded_menu_tags = false;
+
 struct menu_definition		*data_find_menu_from_tag(char *tag);
 struct dbox_chain_data		*data_find_dbox_chain_from_tag(char *tag);
 static char			*data_boolean_yes_no(int value);
@@ -166,12 +168,13 @@ static char			*data_boolean_yes_no(int value);
  * Go through the assembled menu structures, filling in the missing data and
  * getting the contents ready to write out the menu block.
  *
+ * \param embed_tag	True if menu tags should be embedded; else False.
  * \param embed_dbox	True if dialogue box names should be embeded; else False.
  * \param verbose	True if verbose output is required; else False.
  * \return		True if collation completed successfully; else False.
  */
 
-bool data_collate_structures(bool embed_dbox, bool verbose)
+bool data_collate_structures(bool embed_tag, bool embed_dbox, bool verbose)
 {
 	struct menu_definition	*menu;
 	struct item_definition	*item;
@@ -192,6 +195,11 @@ bool data_collate_structures(bool embed_dbox, bool verbose)
 	 */
 
 	offset = sizeof(struct file_head_block);
+
+	if (embed_tag) {
+		offset += sizeof(struct file_menu_head_block);
+		embedded_menu_tags = true;
+	}
 
 	menu = menu_list;
 
@@ -261,12 +269,19 @@ bool data_collate_structures(bool embed_dbox, bool verbose)
 		/* Calculate an offset for the menu block in the file. */
 
 		menu->file_offset = offset;
-		offset += sizeof(struct file_menu_start_block) + sizeof(struct file_menu_block) + (menu->items * sizeof(struct file_item_block));
+
+		if (embed_tag) {
+			offset += sizeof(struct file_menu_block) + (menu->items * sizeof(struct file_item_block));
+			item_offset = menu->file_offset + sizeof(struct file_menu_block);
+		} else {
+			offset += sizeof(struct file_menu_block) + (menu->items * sizeof(struct file_item_block));
+			item_offset = menu->file_offset + sizeof(struct file_menu_block);
+		}
 
 		/* Scan through the menu items. */
 
 		width = 0;
-		item_offset = menu->file_offset + sizeof(struct file_menu_start_block) + sizeof(struct file_menu_block);
+
 		while (item != NULL) {
 			/* Track the widest menu item in characters. */
 
@@ -778,19 +793,19 @@ bool data_write_standard_menu_file(char *filename)
 	struct file_item_block		item_block;
 	struct file_dialogue_head_block	dbox_head_block;
 
-	struct file_menu_start_block	*menu_start_block = NULL;
+//	struct file_menu_start_block	*menu_start_block = NULL;
 	struct file_indirection_block	*indirection_block = NULL;
 	struct file_validation_block	*validation_block = NULL;
 	struct file_dialogue_tag_block	*dbox_tag_block = NULL;
 
-	menu_start_block = malloc(longest_menu_start);
+//	menu_start_block = malloc(longest_menu_start);
 	indirection_block = malloc(longest_indirection);
 	validation_block = malloc(longest_validation);
 	dbox_tag_block = malloc(longest_dbox_chain);
 
-	if (menu_start_block == NULL || indirection_block == NULL || validation_block == NULL || dbox_tag_block == NULL) {
-		if (menu_start_block != NULL)
-			free(menu_start_block);
+	if (indirection_block == NULL || validation_block == NULL || dbox_tag_block == NULL) {
+	//	if (menu_start_block != NULL)
+	//		free(menu_start_block);
 		if (indirection_block != NULL)
 			free(indirection_block);
 		if (validation_block != NULL)
@@ -837,11 +852,11 @@ bool data_write_standard_menu_file(char *filename)
 
 	while (menu != NULL) {
 		if (menu->next == NULL)
-			menu_start_block->next = NULL_OFFSET;
+			menu_block.next = NULL_OFFSET;
 		else
-			menu_start_block->next = (menu->next)->file_offset + 8;
+			menu_block.next = (menu->next)->file_offset + 8;
 
-		menu_start_block->submenus = menu->first_submenu;
+		menu_block.submenus = menu->first_submenu;
 
 		if (menu->title_len == 0) {
 			strncpy(menu_block.title_data.text, menu->title, 12);
@@ -859,7 +874,7 @@ bool data_write_standard_menu_file(char *filename)
 		menu_block.height = menu->item_height;
 		menu_block.gap = menu->item_gap;
 
-		fwrite(menu_start_block, 8, 1, file);
+	//	fwrite(menu_start_block, 8, 1, file);
 		fwrite(&menu_block, sizeof(struct file_menu_block), 1, file);
 
 		item = menu->first_item;
@@ -956,7 +971,7 @@ bool data_write_standard_menu_file(char *filename)
 
 	fclose(file);
 
-	free(menu_start_block);
+//	free(menu_start_block);
 	free(indirection_block);
 	free(validation_block);
 	free(dbox_tag_block);
