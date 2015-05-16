@@ -197,7 +197,7 @@ bool data_collate_structures(bool embed_tag, bool embed_dbox, bool verbose)
 	offset = sizeof(struct file_head_block);
 
 	if (embed_tag) {
-		offset += sizeof(struct file_menu_head_block);
+		offset += sizeof(struct file_extended_head_block);
 		embedded_menu_tags = true;
 	}
 

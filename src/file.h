@@ -44,21 +44,18 @@ struct file_head_block {
 	int				validation;			/**< Offset to the validation data list.	*/
 };
 
-struct file_menu_head_block {
-	int				zero;
-	int				flags;
+/**
+ * Extended file head block, which follows the file head block.
+ * The zero word at the start allows the format to be differentiated
+ * from older versions, as these will always have a non-zero
+ * 'next menu' offset here.
+ */
+
+struct file_extended_head_block {
+	int				zero;				/**< Zero to signify new data format.		*/
+	int				flags;				/**< File format flags (unused at present).	*/
+	int				menus;				/**< Offset to the menu list.			*/
 };
-
-//struct file_menu_start_block {
-//	int				next;
-//	int				submenus;
-//};
-
-//struct file_menu_start_name_block{
-//	int				next;
-//	int				submenus;
-//	char				tag[];		/* Placeholder! */
-//};
 
 /**
  * The block of icon data associated with an indirected text icon in a Wimp
@@ -138,11 +135,20 @@ struct file_dialogue_head_block {
 };
 
 /**
- * New format dialogue list header.
+ * New format dialogue list item.
  */
 
 struct file_dialogue_tag_block {
 	int				dialogues;			/**< Offset to the first dialogue entry.	*/
+	char				tag[];				/**< Zero length placeholder for the name.	*/
+};
+
+/**
+ * New format menu list item.
+ */
+
+struct file_menu_tag_block {
+	int				menu;				/**< Offset to the menu block entry.		*/
 	char				tag[];				/**< Zero length placeholder for the name.	*/
 };
 
