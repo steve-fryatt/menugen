@@ -140,6 +140,16 @@ struct dbox_chain_data {
 	struct dbox_chain_data	*next;
 };
 
+struct menu_tag_data {
+	char			*tag;
+
+	int			menu_offset;
+
+	int			file_offset;
+	int			block_length;
+
+	struct menu_tag_data	*next;
+};
 
 static struct menu_definition	*menu_list = NULL;
 static struct indirection_data	*indirection_list = NULL;
@@ -147,18 +157,17 @@ static struct validation_data	*validation_list = NULL;
 static struct submenu_data	*submenu_list = NULL;
 static struct dbox_data		*dbox_list = NULL;
 static struct dbox_chain_data	*dbox_chain_list = NULL;
+static struct menu_tag_data	*menu_tag_list = NULL;
 
 static struct menu_definition	*current_menu = NULL;
 static struct item_definition	*current_item = NULL;
 
 static int			dbox_offset = NULL_OFFSET;
 
-static int			longest_menu_start = 0;
 static int			longest_indirection = 0;
 static int			longest_validation = 0;
 static int			longest_dbox_chain = 0;
-
-static bool			embedded_menu_tags = false;
+static int			longest_menu_tag = 0;
 
 struct menu_definition		*data_find_menu_from_tag(char *tag);
 struct dbox_chain_data		*data_find_dbox_chain_from_tag(char *tag);
@@ -183,7 +192,8 @@ bool data_collate_structures(bool embed_tag, bool embed_dbox, bool verbose)
 	struct submenu_data	*submenu;
 	struct dbox_data	*dbox;
 	struct dbox_chain_data	*dbox_chain;
-	int			width, offset, item_offset, chain, start_length;
+	struct menu_tag_data	*menu_tag;
+	int			width, offset, item_offset, chain;
 
 	if (menu_list == NULL)
 		return false;
@@ -198,19 +208,12 @@ bool data_collate_structures(bool embed_tag, bool embed_dbox, bool verbose)
 
 	if (embed_tag) {
 		offset += sizeof(struct file_extended_head_block);
-		embedded_menu_tags = true;
 	}
 
 	menu = menu_list;
 
 	while (menu != NULL) {
 		item = menu->first_item;
-
-		/* Work out the length of the start block. */
-
-		start_length = (strlen(menu->tag) + 12) & (~3);
-		if (start_length > longest_menu_start)
-			longest_menu_start = start_length;
 
 		/* Create a dummy menu item if there isn't one. */
 
@@ -270,12 +273,23 @@ bool data_collate_structures(bool embed_tag, bool embed_dbox, bool verbose)
 
 		menu->file_offset = offset;
 
+		offset += sizeof(struct file_menu_block) + (menu->items * sizeof(struct file_item_block));
+		item_offset = menu->file_offset + sizeof(struct file_menu_block);
+
+		/* Create an entry in the embedded menu tags if applicable. */
+
 		if (embed_tag) {
-			offset += sizeof(struct file_menu_block) + (menu->items * sizeof(struct file_item_block));
-			item_offset = menu->file_offset + sizeof(struct file_menu_block);
-		} else {
-			offset += sizeof(struct file_menu_block) + (menu->items * sizeof(struct file_item_block));
-			item_offset = menu->file_offset + sizeof(struct file_menu_block);
+			menu_tag = malloc(sizeof(struct menu_tag_data));
+			
+			if (menu_tag != NULL) {
+				menu_tag->tag = menu->tag;
+				menu_tag->menu_offset = menu->file_offset + 8;
+				menu_tag->file_offset = 0;
+				menu_tag->block_length = 0;
+
+				menu_tag->next = menu_tag_list;
+				menu_tag_list = menu_tag;
+			}
 		}
 
 		/* Scan through the menu items. */
@@ -527,8 +541,32 @@ bool data_collate_structures(bool embed_tag, bool embed_dbox, bool verbose)
 			offset += 4;
 	}
 
+
+	if (embed_tag) {
+		menu_tag = menu_tag_list;
+
+		while (menu_tag != NULL) {
+			menu_tag->file_offset = offset;
+			menu_tag->block_length = (strlen(menu_tag->tag) + 8) & (~3);
+
+			offset += menu_tag->block_length;
+
+			if (menu_tag->block_length > longest_menu_tag)
+				longest_menu_tag = menu_tag->block_length;
+
+			menu_tag = menu_tag->next;
+		}
+
+		/* Include space for terminating -1. */
+
+		if (menu_tag_list != NULL)
+			offset += 4;
+	}
+
+
 	return true;
 }
+
 
 /**
  * Return the menu block corresponding to the given tag.
@@ -583,6 +621,7 @@ void data_print_structure_report(void)
 	struct submenu_data	*submenu;
 	struct dbox_data	*dbox;
 	struct dbox_chain_data	*dbox_chain;
+	struct menu_tag_data	*menu_tag;
 
 	/* Print the contents of the menu structures. */
 
@@ -668,6 +707,27 @@ void data_print_structure_report(void)
 		printf("--------------------------------------------------------------------------------\n");
 
 		submenu = submenu->next;
+	}
+
+	/* Print the contents of the menu tag chain. */
+
+	menu_tag = menu_tag_list;
+
+	if (menu_tag != NULL) {
+		printf("================================================================================\n");
+		printf("Menu Tag List\n");
+		printf("--------------------------------------------------------------------------------\n");
+	}
+
+	while (menu_tag != NULL) {
+		printf("Menu tag:             %s\n", menu_tag->tag);
+		printf("Target offset:        %d bytes\n", menu_tag->menu_offset);
+		printf("Block Length in file: %d bytes\n", menu_tag->block_length);
+		printf("File block offset:    %d bytes\n", menu_tag->file_offset);
+
+		printf("--------------------------------------------------------------------------------\n");
+
+		menu_tag = menu_tag->next;
 	}
 
 	/* Print the contents of the dialogue box chain. */
@@ -787,31 +847,33 @@ bool data_write_standard_menu_file(char *filename)
 	struct validation_data		*validation;
 	struct dbox_data		*dbox, *tail;
 	struct dbox_chain_data		*dbox_chain;
+	struct menu_tag_data		*menu_tag;
 
 	struct file_head_block		head_block;
+	struct file_extended_head_block	extended_head_block;
 	struct file_menu_block		menu_block;
 	struct file_item_block		item_block;
 	struct file_dialogue_head_block	dbox_head_block;
 
-//	struct file_menu_start_block	*menu_start_block = NULL;
 	struct file_indirection_block	*indirection_block = NULL;
 	struct file_validation_block	*validation_block = NULL;
 	struct file_dialogue_tag_block	*dbox_tag_block = NULL;
+	struct file_menu_tag_block	*menu_tag_block = NULL;
 
-//	menu_start_block = malloc(longest_menu_start);
 	indirection_block = malloc(longest_indirection);
 	validation_block = malloc(longest_validation);
 	dbox_tag_block = malloc(longest_dbox_chain);
+	menu_tag_block = malloc(longest_menu_tag);
 
-	if (indirection_block == NULL || validation_block == NULL || dbox_tag_block == NULL) {
-	//	if (menu_start_block != NULL)
-	//		free(menu_start_block);
+	if (indirection_block == NULL || validation_block == NULL || dbox_tag_block == NULL || menu_tag_block == NULL) {
 		if (indirection_block != NULL)
 			free(indirection_block);
 		if (validation_block != NULL)
 			free(validation_block);
 		if (dbox_tag_block != NULL)
 			free(dbox_tag_block);
+		if (menu_tag_block != NULL)
+			free(menu_tag_block);
 
 		return false;
 	}
@@ -846,6 +908,18 @@ bool data_write_standard_menu_file(char *filename)
 
 	fwrite(&head_block, sizeof(struct file_head_block), 1, file);
 
+	/* If there's a menu tag list, this is a new format file with
+	 * an extended head block.
+	 */
+
+	if (menu_tag_list != NULL) {
+		extended_head_block.zero = 0;
+		extended_head_block.flags = 0;	/* Future expansion. */
+		extended_head_block.menus = menu_tag_list->file_offset;
+
+		fwrite(&extended_head_block, sizeof(struct file_extended_head_block), 1, file);
+	}
+
 	/* Write the menu & item blocks. */
 
 	menu = menu_list;
@@ -874,7 +948,6 @@ bool data_write_standard_menu_file(char *filename)
 		menu_block.height = menu->item_height;
 		menu_block.gap = menu->item_gap;
 
-	//	fwrite(menu_start_block, 8, 1, file);
 		fwrite(&menu_block, sizeof(struct file_menu_block), 1, file);
 
 		item = menu->first_item;
@@ -969,12 +1042,33 @@ bool data_write_standard_menu_file(char *filename)
 		fwrite(dbox_tag_block, 4, 1, file);
 	}
 
+	if (menu_tag_list != NULL && menu_tag_list->file_offset != 0) {
+		menu_tag = menu_tag_list;
+		
+		while (menu_tag != NULL) {
+			menu_tag_block->menu = menu_tag->menu_offset;
+			if (menu_tag->tag != NULL)
+				strncpy(menu_tag_block->tag, menu_tag->tag, menu_tag->block_length - sizeof(struct file_menu_tag_block));
+			else
+				strncpy(menu_tag_block->tag, "", menu_tag->block_length - sizeof(struct file_menu_tag_block));
+
+			fwrite(menu_tag_block, menu_tag->block_length, 1, file);
+
+			menu_tag = menu_tag->next;
+		}
+
+		/* Write the terminating -1 at the end of the list. */
+
+		menu_tag_block->menu = NULL_OFFSET;
+		fwrite(menu_tag_block, 4, 1, file);
+	}
+
 	fclose(file);
 
-//	free(menu_start_block);
 	free(indirection_block);
 	free(validation_block);
 	free(dbox_tag_block);
+	free(menu_tag_block);
 
 	/* Output dialogue box details. */
 
