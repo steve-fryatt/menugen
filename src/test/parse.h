@@ -28,8 +28,7 @@
 #include <stdint.h>
 
 /**
- * Load a file into memory, returning a pointer to a malloc()-claimed block
- * and optionally the size of the data.
+ * Process a menu file in memory, displaying details of its contents.
  *
  * \param *file		Pointer to the file data to be processed.
  * \param length	The length of the data block.
