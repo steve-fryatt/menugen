@@ -148,7 +148,7 @@ all: documentation $(OUTDIR)/$(MENUGEN) $(OUTDIR)/$(MENUTEST)
 
 GENOBJS := $(addprefix $(OBJDIR)/$(GENDIR)/, $(GENOBJS))
 
-$(OUTDIR)/$(MENUGEN): $(OBJDIR)/$(GENDIR)/ $(GENOBJS)
+$(OUTDIR)/$(MENUGEN): $(OBJDIR)/$(GENDIR) $(GENOBJS)
 	$(CC) $(CCFLAGS) $(LINKS) -o $(OUTDIR)/$(MENUGEN) $(GENOBJS)
 
 # Build the object files, and identify their dependencies.
@@ -172,7 +172,7 @@ $(OBJDIR)/$(GENDIR):
 
 TESTOBJS := $(addprefix $(OBJDIR)/$(TESTDIR)/, $(TESTOBJS))
 
-$(OUTDIR)/$(MENUTEST): $(OBJDIR)/$(TESTDIR)/ $(TESTOBJS)
+$(OUTDIR)/$(MENUTEST): $(OBJDIR)/$(TESTDIR) $(TESTOBJS)
 	$(CC) $(CCFLAGS) $(LINKS) -o $(OUTDIR)/$(MENUTEST) $(TESTOBJS)
 
 # Build the object files, and identify their dependencies.
