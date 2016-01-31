@@ -45,7 +45,7 @@ The source for <cite>MenuGen</cite> can be found alongside this binary download,
 
 To use <cite>MenuGen</cite>, a menu definition file must be created in a text editor and passed as a parameter to the <command>menugen</command> command.
 
-<comdef target="menugen" params="&lt;source&gt; &lt;output&gt; [-d] [-v]">
+<comdef target="menugen" params="&lt;source&gt; &lt;output&gt; [-d] [-m] [-v]">
 
 The <command>menugen</command> command takes two parameters:
 
@@ -54,10 +54,11 @@ The <command>menugen</command> command takes two parameters:
 <li><command>output</command> is the filename to which the binary Menus file is to be written.
 </list>
 
-Two option flags can also be specified:
+Three option flags can also be specified:
 
 <list>
 <li><command>-d</command> indicates that dialogue box name tags are to be embedded into the file.
+<li><command>-m</command> indicates that menu name tages are to be embedded into the file.
 <li><command>-v</command> specifies verbose output, where details of the file parsing and data structures will be printed to screen.
 </list>
 </comdef>
@@ -119,7 +120,7 @@ A file consists of one or more top-level commands which define the menu structur
 The <command>menu</command> command defines a new, empty menu.  It takes two parameters:
 
 <list>
-<li><command>tag</command> is a alphanumeric tag, which will be used to identify the menu within <cite>MenuGen</cite>. It can not contain spaces.
+<li><command>tag</command> is a alphanumeric tag, which will be used to identify the menu within <cite>MenuGen</cite> and, if embedded into the file, by the application. It can not contain spaces.
 <li><command>title</command> is the menu title. If longer than 12 characters, it will automatically become indirected.
 </list>
 
@@ -348,12 +349,21 @@ The file starts with a 12-byte header, as follows:
 8: Offset to validation data list (or -1 for none)
 </codeblock>
 
-Each of these is described in its own section below.
+There may optionally be an extended header, consisiting of another 12 bytes, following immediately:
 
+<codeblock>
+12: Zero word to identify the extended header.
+16: Option flag word (currently unused, and set to 0)
+20: Offset to menu tag list (or -1 for none)
+</codeblock>
+
+Since without an extended header, byte 12 would be the offset to the next menu definition (and hence -1 if there was only one menu in the file), the presence of zero at this location is used to identify a file in the new format.
+
+Each of the lists above is described in its own section below.
 
 <subhead title="Menu data">
 
-Starting at byte 12 are a sequence of menu data blocks.  Each consists of the following data:
+Starting immediately after the header blocks (so at offset 12 or 24, depending on whether an extended header is present) are a sequence of menu data blocks.  Each consists of the following data:
 
 <codeblock>
 +0: Offset to the next menu data block (or -1 for the last block)
@@ -364,6 +374,18 @@ Starting at byte 12 are a sequence of menu data blocks.  Each consists of the fo
 The next menu block offset points to the start of the Wimp_CreateMenu block for that menu: that is, it points to the 8th byte of the data block.
 
 The submenu list links in any menu items which use this menu block as a submenu.  The offset points to the first submenu pointer (bytes 4-7 of the menu item block); each submenu pointer then contains an offset to the next pointer or -1 if they are the last in the list (which must be read before being replaced by the real pointer).
+
+
+<subhead title="Menu tag list">
+
+If the file contains an extended header and the word at offset 20 is not -1, then there is a list of embedded menu tags which can be used to locate menu definitions. In this case, the word at offset 20 points to a sequence of tag blocks:
+
+<codeblock>
++0: Offset to menu definition (or -1 for end of list)
++4: Tag name (zero terminated)
+</codeblock>
+
+Each block is rounded up to the nearest multiple of four bytes.  The offsets point to the start of the Wimp_CreateMenu structure (ie. the menu title data) for the menu whose tag is included in the block.
 
 
 <subhead title="Dialogue list">
