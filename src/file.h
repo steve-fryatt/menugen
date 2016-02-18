@@ -55,6 +55,7 @@ struct file_extended_head_block {
 	int				zero;				/**< Zero to signify new data format.		*/
 	int				flags;				/**< File format flags (unused at present).	*/
 	int				menus;				/**< Offset to the menu list.			*/
+	int				end;				/**< Zero to indicate the end of the header.	*/
 };
 
 /**

@@ -82,7 +82,7 @@ void parse_process(int8_t *file, size_t length)
 			printf("  No Data\n");
 		}
 
-		menu_offset += 12;
+		menu_offset += 16;
 	} else {
 		printf("\nOld format file.\n");
 	}

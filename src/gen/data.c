@@ -916,6 +916,7 @@ bool data_write_standard_menu_file(char *filename)
 		extended_head_block.zero = 0;
 		extended_head_block.flags = 0;	/* Future expansion. */
 		extended_head_block.menus = menu_tag_list->file_offset;
+		extended_head_block.end = 0;
 
 		fwrite(&extended_head_block, sizeof(struct file_extended_head_block), 1, file);
 	}

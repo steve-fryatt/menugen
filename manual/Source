@@ -9,7 +9,7 @@
 =============================================================================
 MenuGen - Create Menus for RISC OS Applications                  Version $$version$$
 
-(c) Stephen Fryatt, 2001-2012                  $$date$$
+(c) Stephen Fryatt, 2001-2016                  $$date$$
 =============================================================================
 </literal>
 
@@ -58,7 +58,7 @@ Three option flags can also be specified:
 
 <list>
 <li><command>-d</command> indicates that dialogue box name tags are to be embedded into the file.
-<li><command>-m</command> indicates that menu name tages are to be embedded into the file.
+<li><command>-m</command> indicates that menu name tags are to be embedded into the file.
 <li><command>-v</command> specifies verbose output, where details of the file parsing and data structures will be printed to screen.
 </list>
 </comdef>
@@ -349,15 +349,16 @@ The file starts with a 12-byte header, as follows:
 8: Offset to validation data list (or -1 for none)
 </codeblock>
 
-There may optionally be an extended header, consisiting of another 12 bytes, following immediately:
+There may optionally be an extended header, consisting of another 16 bytes, following immediately:
 
 <codeblock>
 12: Zero word to identify the extended header.
 16: Option flag word (currently unused, and set to 0)
 20: Offset to menu tag list (or -1 for none)
+24: Zero word to identify the end of the header.
 </codeblock>
 
-Since without an extended header, byte 12 would be the offset to the next menu definition (and hence -1 if there was only one menu in the file), the presence of zero at this location is used to identify a file in the new format.
+Since without an extended header, byte 12 would be the offset to the next menu definition (and hence -1 if there was only one menu in the file), the presence of zero at this location is used to identify a file in the new format. Since the offsets will never be zero, a zero word at the end of the header is used to delimit the extent of the block.
 
 Each of the lists above is described in its own section below.
 
