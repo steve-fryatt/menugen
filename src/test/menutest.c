@@ -61,21 +61,8 @@ int main(int argc, char *argv[])
 	if (argc < 2)
 		param_error = true;
 
-/*	if (!param_error) {
-		for (param = 3; param < argc; param++) {
-			if (strcmp(argv[param], "-d") == 0)
-				embed_dialogue_names = true;
-			else if (strcmp(argv[param], "-m") == 0)
-				embed_menu_names = true;
-			else if (strcmp(argv[param], "-v") == 0)
-				verbose_output = true;
-			else
-				param_error = true;
-		}
-	} */
-
 	if (param_error) {
-		printf("Usage: menutest <sourcefile>\n");
+		printf("Usage: menutest <file>\n");
 		return 1;
 	}
 
