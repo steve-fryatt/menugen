@@ -26,9 +26,10 @@
  * Generate menu definition blocks for RISC OS in a cross-compilation
  * environment.
  *
- * Syntax: MenuGen [<options>]
+ * Syntax: MenuGen <source> <output> [<options>]
  *
  * Options -d  - Embed dialogue box names into the output
+ *         -m  - Embed menu names into the output
  *         -v  - Produce verbose output
  */
 
