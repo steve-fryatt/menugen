@@ -376,7 +376,7 @@ Each of the lists above is described in its own section below.
 
 <subhead title="Menu data">
 
-Starting immediately after the header blocks (so at offset 12 or 24, depending on whether an extended header is present) are a sequence of menu data blocks.  Each consists of the following data:
+Starting immediately after the header blocks (so at offset 12 or 28, depending on whether an extended header is present) are a sequence of menu data blocks.  Each consists of the following data:
 
 <codeblock>
 +0: Offset to the next menu data block (or -1 for the last block)
