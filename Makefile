@@ -136,6 +136,7 @@ endif
 
 MANSRC := Source
 MANSPR := ManSprite
+LICSRC ?= Licence
 
 GENOBJS := data.o menugen.o parse.o stack.o
 TESTOBJS := file.o menutest.o parse.o
@@ -198,6 +199,8 @@ documentation: $(OUTDIR)/$(README)
 
 $(OUTDIR)/$(README): $(MANUAL)/$(MANSRC)
 	$(MANTOOLS) -MTEXT -I$(MANUAL)/$(MANSRC) -O$(OUTDIR)/$(README) -D'version=$(HELP_VERSION)' -D'date=$(HELP_DATE)'
+$(OUTDIR)/$(LICENCE): $(LICSRC)
+	$(CP) $(LICSRC) $(OUTDIR)/$(LICENCE)
 
 # Build the release Zip file.
 
@@ -230,4 +233,5 @@ clean:
 	$(RM) $(OUTDIR)/$(MENUGEN)
 	$(RM) $(OUTDIR)/$(MENUTEST)
 	$(RM) $(OUTDIR)/$(README)
+	$(RM) $(OUTDIR)/$(LICENCE)
 
