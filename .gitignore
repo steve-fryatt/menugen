@@ -1,0 +1,9 @@
+buildlinux/Licence.txt
+buildlinux/menugen
+buildlinux/menutest
+buildlinux/ReadMe.txt
+buildro/Licence,fff
+buildro/menugen,ff8
+buildro/menutest,ff8
+buildro/ReadMe,fff
+obj/
