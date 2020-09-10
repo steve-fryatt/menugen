@@ -9,7 +9,7 @@
 =============================================================================
 MenuGen - Create Menus for RISC OS Applications                  Version $$version$$
 
-(c) Stephen Fryatt, 2001-2016                  $$date$$
+(c) Stephen Fryatt, 2001-2020                  $$date$$
 =============================================================================
 </literal>
 
@@ -17,7 +17,7 @@ MenuGen - Create Menus for RISC OS Applications                  Version $$versi
 
 <chapter title="Licence" file="Licence">
 
-<cite>MenuGen</cite> is licensed under the EUPL, Version&nbsp;1.1 only (the "Licence"); you may not use this work except in compliance with the Licence.
+<cite>MenuGen</cite> is licensed under the EUPL, Version&nbsp;1.2 only (the "Licence"); you may not use this work except in compliance with the Licence.
 
 You may obtain a copy of the Licence at <link ref="#url http://joinup.ec.europa.eu/software/page/eupl">http://joinup.ec.europa.eu/software/page/eupl</link>
 
