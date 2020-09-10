@@ -218,6 +218,7 @@ backup:
 # Install the finished version in the GCCSDK, ready for use.
 
 install: clean all
+	$(MKDIR) $(SFTOOLS_BIN)
 	$(CP) -r $(OUTDIR)/$(MENUGEN) $(SFTOOLS_BIN)
 #	$(CP) -r $(OUTDIR)/$(MENUTEST) $(SFTOOLS_BIN)
 
