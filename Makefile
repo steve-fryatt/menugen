@@ -149,7 +149,7 @@ all: documentation $(OUTDIR)/$(MENUGEN) $(OUTDIR)/$(MENUTEST)
 
 GENOBJS := $(addprefix $(OBJDIR)/$(GENDIR)/, $(GENOBJS))
 
-$(OUTDIR)/$(MENUGEN): $(OBJDIR)/$(GENDIR) $(GENOBJS)
+$(OUTDIR)/$(MENUGEN): $(OUTDIR) $(OBJDIR)/$(GENDIR) $(GENOBJS)
 	$(CC) $(CCFLAGS) $(LINKS) -o $(OUTDIR)/$(MENUGEN) $(GENOBJS)
 
 # Build the object files, and identify their dependencies.
@@ -173,7 +173,7 @@ $(OBJDIR)/$(GENDIR):
 
 TESTOBJS := $(addprefix $(OBJDIR)/$(TESTDIR)/, $(TESTOBJS))
 
-$(OUTDIR)/$(MENUTEST): $(OBJDIR)/$(TESTDIR) $(TESTOBJS)
+$(OUTDIR)/$(MENUTEST): $(OUTDIR) $(OBJDIR)/$(TESTDIR) $(TESTOBJS)
 	$(CC) $(CCFLAGS) $(LINKS) -o $(OUTDIR)/$(MENUTEST) $(TESTOBJS)
 
 # Build the object files, and identify their dependencies.
@@ -193,9 +193,14 @@ $(OBJDIR)/$(TESTDIR)/%.o: $(SRCDIR)/$(TESTDIR)/%.c
 $(OBJDIR)/$(TESTDIR):
 	$(MKDIR) $(OBJDIR)/$(TESTDIR)
 
+# Create a folder to take the output.
+
+$(OUTDIR):
+	$(MKDIR) $(OUTDIR)
+
 # Build the documentation
 
-documentation: $(OUTDIR)/$(README)
+documentation: $(OUTDIR) $(OUTDIR)/$(README)
 
 $(OUTDIR)/$(README): $(MANUAL)/$(MANSRC)
 	$(MANTOOLS) -MTEXT -I$(MANUAL)/$(MANSRC) -O$(OUTDIR)/$(README) -D'version=$(HELP_VERSION)' -D'date=$(HELP_DATE)'
