@@ -123,12 +123,12 @@ ifeq ($(TARGET),riscos)
   MENUGEN := menugen,ff8
   MENUTEST := menutest,ff8
   README := ReadMe,fff
-  LICENSE := Licence,fff
+  LICENCE := Licence,fff
 else
   MENUGEN := menugen
   MENUTEST := menutest
   README := ReadMe.txt
-  LICENSE := Licence.txt
+  LICENCE := Licence.txt
 endif
 
 # Set up the source files.
@@ -199,10 +199,11 @@ $(OUTDIR):
 
 # Build the documentation
 
-documentation: $(OUTDIR) $(OUTDIR)/$(README)
+documentation: $(OUTDIR) $(OUTDIR)/$(README) $(OUTDIR)/$(LICENCE)
 
 $(OUTDIR)/$(README): $(MANUAL)/$(MANSRC)
 	$(MANTOOLS) -MTEXT -I$(MANUAL)/$(MANSRC) -O$(OUTDIR)/$(README) -D'version=$(HELP_VERSION)' -D'date=$(HELP_DATE)'
+
 $(OUTDIR)/$(LICENCE): $(LICSRC)
 	$(CP) $(LICSRC) $(OUTDIR)/$(LICENCE)
 
@@ -210,7 +211,7 @@ $(OUTDIR)/$(LICENCE): $(LICSRC)
 
 release: clean all
 	$(RM) ../$(ZIPFILE)
-	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../../$(ZIPFILE) $(MENUGEN) $(MENUTEST) $(README) $(LICENSE))
+	(cd $(OUTDIR) ; $(ZIP) $(ZIPFLAGS) ../../$(ZIPFILE) $(MENUGEN) $(MENUTEST) $(README) $(LICENCE))
 	$(RM) ../$(SRCZIPFILE)
 	$(ZIP) $(SRCZIPFLAGS) ../$(SRCZIPFILE) $(OUTDIRLINUX) $(OUTDIRRO) $(SRCDIR) $(MANUAL) Makefile
 
