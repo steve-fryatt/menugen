@@ -471,6 +471,10 @@ Original BBC BASIC code.
 Rewritten in C for use with GCCSDK.
 
 
+<subhead title="2.01 (31 October 2021)">
+
+Rebuild for RISC&nbsp;OS.
+
 </chapter>
 
 
